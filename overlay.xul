@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<overlay id="nova_antispam" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script type="application/javascript" src="chrome://nova_antispam/content/overlay.js"/>
+<script type="application/javascript" src="chrome://nova_antispam/content/seting.js"/>
+ <menupopup id="taskPopup">
+  <menuitem id="removeUnpaidPosts" type="checkbox" label="Удалять неоплаченные сообщения" command="save_check()" checked="false"/>
+  <menuitem id="setnvcPrice" label="Указать требуемую сумму nvc"/>
+  <menuitem id="setnvcAddres" label="Указать адрес для получения nvc"/>
+  <menuitem id="addToWhiteList" label="Добавить разрешённый email"/>
+ </menupopup>
+ <menupopup xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="appmenu_taskPopup">
+  <xul:arrowscrollbox xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="popup-internal-box" flex="1" orient="vertical" smoothscroll="false">
+   <menuitem id="remove_unpaidPosts" type="checkbox" label="Удалять неоплаченные сообщения" command="save_check()" checked="false"/>
+   <menuitem id="set_nvcPrice" label="Указать требуемую сумму nvc"/>
+   <menuitem id="set_nvcAddres" label="Указать адрес для получения nvc"/>
+   <menuitem id="add_ToWhiteList" label="Добавить разрешённый email"/>
+  </xul:arrowscrollbox>
+ </menupopup>
+ <statusbar id="status-bar">
+  <statusbarpanel id="nova-panel" label="Nova"/>
+ </statusbar>
+</overlay>
