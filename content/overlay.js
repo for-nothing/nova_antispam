@@ -1,6 +1,11 @@
+function rep_err(novaPanel){
+	novaPanel.label = "Nova: " + request_posts.length + " " + msg_letters_pay + ", " + deleted + msg_letters_del + ", " + paid_posts.length + " " + msg_paid;
+}
+
 window.addEventListener("load",function(){ 
 	var novaPanel = document.getElementById("nova-panel");
-	novaPanel.label = "Nova: скрипт жив";
+  novaPanel.minWidth=200;
+	novaPanel.label = msg_status_alive;  
 	get_save();
 	novaPanel.label = "Nova: get_save";
 	var check_line = document.getElementById("removeUnpaidPosts");
@@ -18,7 +23,7 @@ window.addEventListener("load",function(){
 	check_nova(novaPanel);
 	novaPanel.label = "Nova: check_nova";
 	check_conf(novaPanel);
-	novaPanel.label = "Nova: ошибка,возможно клиент novacoin не запущен";
+	novaPanel.label = err_client_not_run + "(load)";
 	check_user(novaPanel);
 	novaPanel.label = "Nova: check_user";
 	check_mail(novaPanel);
@@ -26,7 +31,7 @@ window.addEventListener("load",function(){
 	window.setInterval(function(){
 		check_mail(novaPanel); 
 		rep_err(novaPanel);
-	},60000);
+	}, 60000);
 	rep_err(novaPanel);
 }, false);
 
@@ -77,9 +82,6 @@ function get_save(){
 	}
 }
 
-function rep_err(novaPanel){
-	novaPanel.label = "Nova: " + request_posts.length + " запросов оплаты , " + deleted + " сообщений удалено , " + paid_posts.length + " оплачено" ;
-} 
 
 function save_check(id_name){
 	request_posts = [];
@@ -117,14 +119,14 @@ function check_nova(novaPanel){
 	if(!file.exists()){
 		global_error = 1;
 		var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-		var result = prompts.confirm(null, "novacoin не найден", "по видимому у вас нет клиента novacoin.желаете его установить?(после запуска клиента novacoin дождитесь синхронизации с сетью.затем нужно будет создать файл novacoin.conf,но об этом в следующий раз)");
+		var result = prompts.confirm(null, title_not_found, err_client_not_found);
 		if(result){
 			var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(Components.interfaces.nsIWindowWatcher);
 			var win = ww.openWindow(null, "http://sourceforge.net/projects/novacoin/files/latest/download?source=files","aboutNovacoin", "chrome,centerscreen", null);
-			novaPanel.label = "Nova: после того как клиент novacoin синхронизируется перезапустите thunderbird.далее при работе с thunderbird клиент novacoin должен быть запущен";
+			novaPanel.label = msg_after_install;
 		}
 		else{
-			novaPanel.label = "Nova: " + global_error + " не удалось обнаружить папку novacoin";
+			novaPanel.label = "Nova: " + global_error + err_dir_not_found;
 		}
 	}
 }
@@ -137,7 +139,7 @@ function check_conf(novaPanel){
 		if(!file.exists()){
 			global_error = 2;
 			var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-			var result = prompts.confirm(null, "novacoin.conf не найден", "по видимому у вас нет файла novacoin.conf.желаете создать его автоматически?(после создания файла novacoin.conf потребуется перезапустить клиент novacoin и thunderbird)");
+			var result = prompts.confirm(null, title_conf_not_found, err_conf_not_found);
 			if(result){
 				var conf = "server=1\r\nrpcuser=";
 				var abc = "qwertyuioplkjhgfdsazxcvbnmMNBVCXZASDFGHJKLPOIUYTREWQ0123654789";
@@ -155,10 +157,10 @@ function check_conf(novaPanel){
 				foStream.init(file, 0x02 | 0x08 | 0x20, 0660, 0);
 				foStream.write(conf, conf.length);
 				foStream.close();
-				novaPanel.label = "Nova: файл novacoin.conf создан.для продолжения работы понадобится перезапустить клиент novacoin и thunderbird";
+				novaPanel.label = msg_conf_created;
 			}
 			else{
-				novaPanel.label = "Nova: не удалось обнаружить файл novacoin.conf";
+				novaPanel.label = status_no_conf;
 			}
 		}
 	}
@@ -225,7 +227,7 @@ function check_user(novaPanel){
 				global_error = 3;
 			}
 			else{
-				novaPanel.label = "Nova: ошибка,воможно не запущен клиент novacoin(check_user)";
+				novaPanel.label = err_client_not_run + "(check_user)";
 			}
 		}
 	}
@@ -246,7 +248,7 @@ function request_payment(novaPanel,do_it){
 	novaPanel.label = "Nova: start request_payment";
 	var cf = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
 	cf.from = (ms_hr.mime2DecodedRecipients + ms_hr.recipients).match(/<[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*>/)[0].slice(1,-1);
-	cf.subject = "требование оплаты";
+	cf.subject = rpl_subject;
 	cf.to = (ms_hr.mime2DecodedAuthor + ms_hr.author).match(/<[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*>/)[0].slice(1,-1);
 	cf.body = do_it;
 //prompts.alert(null, cf.to, cf.body);
@@ -327,7 +329,7 @@ function start_msg(novaPanel){
 //prompts.alert(null, "", "start start_msg " + msg_num + " " + array_msg.length + " " + nova_inbox.URI );
 	novaPanel.label = "Nova: start start_msg";
 	if(msg_num < array_msg.length){
-		novaPanel.label = "Nova: work start_msg,in array";
+		novaPanel.label = "Nova: work start_msg, in array";
 		ms_hr = array_msg[msg_num];
 		var uri_m = nova_inbox.getUriForMsg(ms_hr);
 		let messenger = Components.classes["@mozilla.org/messenger;1"].createInstance(Components.interfaces.nsIMessenger);
@@ -336,7 +338,7 @@ function start_msg(novaPanel){
 		var mssg = nova_inbox.getMsgTextFromStream(listener.inputStream,ms_hr.Charset,ms_hr.messageSize,ms_hr.offlineMessageSize,false,true,{ });
 		if(mssg.match(/[0-9a-z]{64}/)){
 //prompts.alert(null, "", "match txid" );
-			novaPanel.label = "Nova: ошибка,воможно не запущен клиент novacoin";
+			novaPanel.label = err_client_not_run + "(start_msg)";
 			txid = mssg.match(/[0-9a-z]{64}/)[0];
 			var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
 			req.open('POST', "http://" + user_attr.rpcuser + ":" + user_attr.rpcpassword + "@" + user_attr.rpcallowip + ":" + user_attr.rpcport + "/", false);
@@ -355,7 +357,7 @@ function start_msg(novaPanel){
 			}
 		}
 		else{
-			request_payment(novaPanel,"Ваше письмо удалено.Если вы хотите чтобы адресат всё-таки увидел ваше письмо отправьте не менее " + price + "nvc (не знаете что это?проследуйте вот сюда http://novaco.in ) на адрес " + user_attr.addres + " ,не позже суток с момента отправки nvc укажите в письме ID транзакции(txid)(64 символа,цифры и латинские буквы в нижнем регистре) и отправьте письмо снова.\r\n");
+			request_payment(novaPanel, rpl_body_1 + price + rpl_body_2 + user_attr.addres + rpl_body_3);
 			if(save_ch == "true"){
 				gFolderDisplay.selectMessage(ms_hr);
 				MsgMoveMessage(nova_trash);
@@ -375,7 +377,7 @@ function process_message(novaPanel){
 //prompts.alert(null, "", "start process_message" );
 	novaPanel.label = "Nova: start process_message";
 	if(tranz.error && (tranz.error.code == -5)){
-		request_payment(novaPanel,"Вы указали некорректный ID транзакции(txid) и ваше письмо удалено.Если вы хотите чтобы адресат всё-таки увидел ваше письмо удалите из него некорректный ID транзакции,укажите в нём корректный ID транзакции(txid)(64 символа,цифры и латинские буквы в нижнем регистре) и отправьте снова.\r\n");
+		request_payment(novaPanel, err_incorrect_txid);
 		if(save_ch == "true"){
 			gFolderDisplay.selectMessage(ms_hr);
 			MsgMoveMessage(nova_trash);
@@ -383,7 +385,7 @@ function process_message(novaPanel){
 		}
 	}
 	else if(tranz.result.details[0].address != user_attr.addres){
-		request_payment(novaPanel,"Вы отправили nvc на неизвестный адрес и ваше письмо удалено.Если вы хотите чтобы адресат всё-таки увидел ваше письмо отравьте не менее " + price + "nvc на адрес " + user_attr.addres + " ,в течение суток укажите в письме ID транзакции(txid)(64 символа,цифры и латинские буквы в нижнем регистре) и отправьте письмо снова.\r\n");
+		request_payment(novaPanel, err_wrong_target + price + rpl_body_2s + user_attr.addres + rpl_body_3);
 		if(save_ch == "true"){
 			gFolderDisplay.selectMessage(ms_hr);
 			MsgMoveMessage(nova_trash);
@@ -391,7 +393,7 @@ function process_message(novaPanel){
 		}
 	}
 	else if(tranz.result.amount < price){
-		request_payment(novaPanel,"Вы отправили на адрес " + user_attr.addres + " меньше " + price + "nvc и ваше письмо удалено.Если вы хотите чтобы адресат всё-таки увидел ваше письмо отравьте не менее " + price + "nvc на указанный адрес,в течение суток укажите в письме ID транзакции(txid)(64 символа,цифры и латинские буквы в нижнем регистре) и отправьте письмо снова.\r\n");
+		request_payment(novaPanel, msg_u_send_to + user_attr.addres + msg_bellow + price + " NVC" + rpl_body_1 + price + rpl_body_2d + rpl_body_3);
 		if(save_ch == "true"){
 			gFolderDisplay.selectMessage(ms_hr);
 			MsgMoveMessage(nova_trash);
@@ -399,7 +401,7 @@ function process_message(novaPanel){
 		}
 	}
 	else if(tranz.result.vout[0].value == 0){
-		request_payment(novaPanel,"Вы отправили nvc без комиссии и ваше письмо удалено.Если вы хотите чтобы адресат всё-таки увидел ваше письмо отравьте с комиссией не менее " + price + "nvc на адрес " + user_attr.addres + " ,в течение суток укажите в письме ID транзакции(txid)(64 символа,цифры и латинские буквы в нижнем регистре) и отправьте письмо снова.\r\n");
+		request_payment(novaPanel, err_no_comission + rpl_body_1 + price + rpl_body_2 + user_attr.addres + rpl_body_3);
 		if(save_ch == "true"){
 			gFolderDisplay.selectMessage(ms_hr);
 			MsgMoveMessage(nova_trash);
@@ -407,7 +409,7 @@ function process_message(novaPanel){
 		}
 	}
 	else if(paid_posts.indexOf(txid) != -1){
-		request_payment(novaPanel,"Вы пытались использовать ID транзакции " + txid + " повторно и ваше письмо удалено.Если вы хотите чтобы адресат всё-таки увидел ваше письмо отравьте с комиссией не менее " + price + "nvc на адрес " + user_attr.addres + " ,в течение суток укажите в письме ID транзакции(txid)(64 символа,цифры и латинские буквы в нижнем регистре) и отправьте письмо снова.\r\n");
+		request_payment(novaPanel, err_double_use + txid + rpl_body_1 + price + rpl_body_2 + user_attr.addres + rpl_body_3);
 		if(save_ch == "true"){
 			gFolderDisplay.selectMessage(ms_hr);
 			MsgMoveMessage(nova_trash);
@@ -433,6 +435,6 @@ function check_mail(novaPanel){
 	
 	}
 	else if(global_error == 0){
-		novaPanel.label = "Nova: ошибка,воможно не запущен клиент novacoin";
+		novaPanel.label = err_client_not_run + "(check_mail)";
 	}
 }
