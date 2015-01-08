@@ -1,3 +1,17 @@
+function conmsg(msg){
+ if (console)
+     console.log(msg);
+}
+
+function local_file(){
+   return Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);         
+}
+
+function input_stream() {
+   return Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+}
+
+
 function rep_err(novaPanel){
 	novaPanel.label = "Nova: " + request_posts.length + " " + msg_letters_pay + ", " + deleted + msg_letters_del + ", " + paid_posts.length + " " + msg_paid;
 }
@@ -19,11 +33,13 @@ window.addEventListener("load",function(){
 		save_check("removeUnpaidPosts");
 		check_mail(novaPanel);
 	},false);
+ 
+  conmsg("nova_antispam load in progress..."); 
 	novaPanel.label = "Nova: check__line register";
 	check_nova(novaPanel);
 	novaPanel.label = "Nova: check_nova";
 	check_conf(novaPanel);
-	novaPanel.label = err_client_not_run + "(load)";
+	novaPanel.label = err_client_not_run + "(load)"; 
 	check_user(novaPanel);
 	novaPanel.label = "Nova: check_user";
 	check_mail(novaPanel);
@@ -41,8 +57,8 @@ var user_attr = { };
 user_attr.rpcuser = "";
 user_attr.rpcpassword = "";
 user_attr.rpcallowip = "";
-user_attr.rpcport = "";
-user_attr.addres = "";
+user_attr.rpcport = "8344";
+user_attr.address = "";
 var save_ch = "     ";
 var paid_posts = [];
 var request_posts = [];
@@ -56,7 +72,7 @@ function get_save(){
 	var prof = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("ProfD", Components.interfaces.nsIFile);
 	file.initWithPath(prof.path + "\\flag_save.txt");
 	if(file.exists()){
-		var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+		var istream = input_stream();
 		istream.init(file, 0x01, 00660, null);
 		var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
 		mInputStream.init(istream);
@@ -98,7 +114,7 @@ function save_check(id_name){
 	var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 	var prof = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("ProfD", Components.interfaces.nsIFile);
 	file.initWithPath(prof.path + "\\flag_save.txt");
-	var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+	var istream = input_stream();
 	istream.init(file, 0x01, 00660, null);
 	var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
 	mInputStream.init(istream);
@@ -133,7 +149,7 @@ function check_nova(novaPanel){
 
 function check_conf(novaPanel){
 	if(!global_error){
-		var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+		var file = local_file();
 		var roaming = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("AppData", Components.interfaces.nsIFile);
 		file.initWithPath(roaming.path+"\\NovaCoin\\novacoin.conf");
 		if(!file.exists()){
@@ -166,12 +182,17 @@ function check_conf(novaPanel){
 	}
 }
 
+
+
 function check_user(novaPanel){
-	if(!global_error){
-		var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+  novaPanel.label = "Nova: check user 0";
+	if(!global_error){     
+		var file = local_file();
 		var roaming = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("AppData", Components.interfaces.nsIFile);
+    novaPanel.label = "Nova: AppData = " + roaming.path;    
 		file.initWithPath(roaming.path+"\\NovaCoin\\novacoin.conf");
-		var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+    
+		var istream = input_stream();
 		istream.init(file, 0x01, 00660, null);
 		var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
 		mInputStream.init(istream);
@@ -181,11 +202,16 @@ function check_user(novaPanel){
 		user_attr.rpcuser = conf.match(/^rpcuser.*\w/gm)[0].slice(8);
 		user_attr.rpcpassword =  conf.match(/^rpcpassword.*\w/gm)[0].slice(12);
 		user_attr.rpcallowip = conf.match(/^rpcallowip.*\w/gm)[0].slice(11);
-		user_attr.rpcport = conf.match(/^rpcport.*\w/gm)[0].slice(8);
+    var v = conf.match(/^rpcport.*\w/gm)[0].slice(8); 
+    if (v) user_attr.rpcport = v;
+    novaPanel.label = "Nova: rpcuser=" + user_attr.rpcuser + ", rpcport=" + user_attr.rpcport;  
+   
 		var prof = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("ProfD", Components.interfaces.nsIFile);
-		file.initWithPath(prof.path + "\\extensions\\user_save.txt");
+    var file_name = prof.path + "\\extensions\\user_save.conf"; 
+		file.initWithPath(file_name);
 		if(file.exists()){
-			var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+      novaPanel.label = "Nova: parsing " + file_name;
+			var istream = input_stream();
 			istream.init(file, 0x01, 00660, null);
 			var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
 			mInputStream.init(istream);
@@ -197,8 +223,8 @@ function check_user(novaPanel){
 			}
 			if(save_str.match(/\w[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*\w/g)){
 				white_list = save_str.match(/\w[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*\w/g);}
-			if(save_str.match(/addres=4[a-z0-9A-Z]{33}/)){
-				user_attr.addres = save_str.match(/4[a-z0-9A-Z]{33}/)[0];
+			if(save_str.match(/address=4[a-z0-9A-Z]{33}/)){
+				user_attr.address = save_str.match(/4[a-z0-9A-Z]{33}/)[0];
 				global_error = 3;
 			}
 			else{
@@ -207,13 +233,13 @@ function check_user(novaPanel){
 				req.setRequestHeader('Content-Type', 'text/plain');
 				req.send('{ \"method\": \"getaccountaddress\", \"params\": ["' + user_attr.rpcuser + '"]}');
 				if(req.readyState == 4){
-					user_attr.addres = JSON.parse(req.responseText).result;
+					user_attr.address = JSON.parse(req.responseText).result;
 					global_error = 3;
 				}
 			}
 		}
 		else{
-			var save_str = "addres=write_there_your_novacoin_addres \r\n\r\nprice=write_here_instead_your_price \r\n\r\nwrite below the allowable email addresses \r\n";
+			var save_str = "address=write_there_your_novacoin_address \r\n\r\nprice=write_here_instead_your_price \r\n\r\nwrite below the allowable email addresses \r\n";
 			var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
 			foStream.init(file, 0x02 | 0x08 | 0x20, 0660, 0);
 			foStream.write(save_str, save_str.length);
@@ -223,7 +249,7 @@ function check_user(novaPanel){
 			req.setRequestHeader('Content-Type', 'text/plain');
 			req.send('{ \"method\": \"getaccountaddress\", \"params\": ["' + user_attr.rpcuser + '"]}');
 			if(req.readyState == 4){
-				user_attr.addres = JSON.parse(req.responseText).result;
+				user_attr.address = JSON.parse(req.responseText).result;
 				global_error = 3;
 			}
 			else{
@@ -244,6 +270,8 @@ var nova_trash = { };
 //var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
 
 function request_payment(novaPanel,do_it){
+  if (1) return; // debug mode
+
 	var acctMgr = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 	novaPanel.label = "Nova: start request_payment";
 	var cf = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
@@ -310,12 +338,13 @@ function process_account(novaPanel){
 	if(has_trash + has_inbox == 2){
 		var entries = nova_inbox.messages;
 		array_msg = [];
-			while(entries.hasMoreElements()){
+    // verify message loop
+	  while(entries.hasMoreElements()){
 			var entry = entries.getNext();
 			entry.QueryInterface(Components.interfaces.nsIMsgDBHdr);
 			var e_ml = (entry.mime2DecodedAuthor + entry.author).match(/<[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*>/)[0].slice(1,-1);
 			if((paid_posts.indexOf(entry.messageKey) == -1) && (request_posts.indexOf(entry.messageKey) == -1) && (white_list.indexOf(e_ml) == -1)){
-				array_msg.push(entry);
+			  	array_msg.push(entry);
 			}
 		}
 		window.setTimeout(function () {
@@ -357,7 +386,7 @@ function start_msg(novaPanel){
 			}
 		}
 		else{
-			request_payment(novaPanel, rpl_body_1 + price + rpl_body_2 + user_attr.addres + rpl_body_3);
+			request_payment(novaPanel, rpl_body_1 + price + rpl_body_2 + user_attr.address + rpl_body_3);
 			if(save_ch == "true"){
 				gFolderDisplay.selectMessage(ms_hr);
 				MsgMoveMessage(nova_trash);
@@ -384,8 +413,8 @@ function process_message(novaPanel){
 			deleted++;
 		}
 	}
-	else if(tranz.result.details[0].address != user_attr.addres){
-		request_payment(novaPanel, err_wrong_target + price + rpl_body_2s + user_attr.addres + rpl_body_3);
+	else if(tranz.result.details[0].address != user_attr.address){
+		request_payment(novaPanel, err_wrong_target + price + rpl_body_2s + user_attr.address + rpl_body_3);
 		if(save_ch == "true"){
 			gFolderDisplay.selectMessage(ms_hr);
 			MsgMoveMessage(nova_trash);
@@ -393,7 +422,7 @@ function process_message(novaPanel){
 		}
 	}
 	else if(tranz.result.amount < price){
-		request_payment(novaPanel, msg_u_send_to + user_attr.addres + msg_bellow + price + " NVC" + rpl_body_1 + price + rpl_body_2d + rpl_body_3);
+		request_payment(novaPanel, msg_u_send_to + user_attr.address + msg_bellow + price + " NVC" + rpl_body_1 + price + rpl_body_2d + rpl_body_3);
 		if(save_ch == "true"){
 			gFolderDisplay.selectMessage(ms_hr);
 			MsgMoveMessage(nova_trash);
@@ -401,7 +430,7 @@ function process_message(novaPanel){
 		}
 	}
 	else if(tranz.result.vout[0].value == 0){
-		request_payment(novaPanel, err_no_comission + rpl_body_1 + price + rpl_body_2 + user_attr.addres + rpl_body_3);
+		request_payment(novaPanel, err_no_comission + rpl_body_1 + price + rpl_body_2 + user_attr.address + rpl_body_3);
 		if(save_ch == "true"){
 			gFolderDisplay.selectMessage(ms_hr);
 			MsgMoveMessage(nova_trash);
@@ -409,7 +438,7 @@ function process_message(novaPanel){
 		}
 	}
 	else if(paid_posts.indexOf(txid) != -1){
-		request_payment(novaPanel, err_double_use + txid + rpl_body_1 + price + rpl_body_2 + user_attr.addres + rpl_body_3);
+		request_payment(novaPanel, err_double_use + txid + rpl_body_1 + price + rpl_body_2 + user_attr.address + rpl_body_3);
 		if(save_ch == "true"){
 			gFolderDisplay.selectMessage(ms_hr);
 			MsgMoveMessage(nova_trash);
