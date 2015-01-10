@@ -22,17 +22,7 @@ window.addEventListener("load",function(){
 	novaPanel.label = msg_status_alive;  
 	get_save();
 	novaPanel.label = "Nova: get_save";
-	var check_line = document.getElementById("removeUnpaidPosts");
-	check_line.addEventListener("click",function(){
-		save_check("remove_unpaidPosts");
-		check_mail(novaPanel);
-	},false);
-	novaPanel.label = "Nova: check_line register";
-	var check__line = document.getElementById("remove_unpaidPosts");
-	check__line.addEventListener("click",function(){
-		save_check("removeUnpaidPosts");
-		check_mail(novaPanel);
-	},false);
+
  
   conmsg("nova_antispam load in progress..."); 
 	novaPanel.label = "Nova: check__line register";
@@ -46,7 +36,6 @@ window.addEventListener("load",function(){
 	novaPanel.label = "Nova: check_mail";
 	window.setInterval(function(){
 		check_mail(novaPanel); 
-		rep_err(novaPanel);
 	}, 60000);
 	rep_err(novaPanel);
 }, false);
@@ -66,11 +55,14 @@ var deleted = 0;
 var white_list = [];
 var price = 0.1;
 var paid_txid = [];
+var sync_ch = "true";
+var enbl_accnts = [];
+
 
 function get_save(){
 	var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 	var prof = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("ProfD", Components.interfaces.nsIFile);
-	file.initWithPath(prof.path + "\\flag_save.txt");
+	file.initWithPath(prof.path + "\\flag_save013.txt");
 	if(file.exists()){
 		var istream = input_stream();
 		istream.init(file, 0x01, 00660, null);
@@ -79,53 +71,59 @@ function get_save(){
 		var save_str = mInputStream.read(mInputStream.available());
 		istream.close();
 		mInputStream.close();
-		save_ch = save_str.match(/false|true/)[0];
+		save_ch = save_str.match(/false|true/g)[0];
 		var check_line = document.getElementById("removeUnpaidPosts");
 		var check__line = document.getElementById("remove_unpaidPosts");
 		check_line.setAttribute("checked", save_ch);
 		check__line.setAttribute("checked", save_ch);
+		sync_ch = save_str.match(/false|true/g)[1];
+		var sync_book = document.getElementById("syncAddrBook");
+		sync_book.setAttribute("checked", sync_ch);
+		var sync__book = document.getElementById("sync_AddrBook");
+		sync__book.setAttribute("checked", sync_ch);
 	}else{
 		save_ch = "false";
+		sync_ch = "true";
+		var sync_book = document.getElementById("syncAddrBook");
+		sync_book.setAttribute("checked", sync_ch);
+		var sync__book = document.getElementById("sync_AddrBook");
+		sync__book.setAttribute("checked", sync_ch);
 		var check_line = document.getElementById("removeUnpaidPosts");
 		var check__line = document.getElementById("remove_unpaidPosts");
 		check_line.setAttribute("checked", save_ch);
 		check__line.setAttribute("checked", save_ch);
-		var save_str = "false\r\n";
+		var save_str = "removeUnpaidPosts=false\r\nsyncAddrBook=true\r\n";
 		var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
 		foStream.init(file, 0x02 | 0x08 | 0x20, 0660, 0);
 		foStream.write(save_str, save_str.length);
 		foStream.close();
 	}
-}
-
-
-function save_check(id_name){
-	request_posts = [];
-	paid_posts = [];
-	var check__line = document.getElementById(id_name);
-	if(save_ch == "false"){
-		save_ch = "true";
-		check__line.setAttribute("checked", save_ch);
+	file.initWithPath(prof.path + "\\txid_save.txt");
+	if(file.exists()){
+		var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+		istream.init(file, 0x01, 00660, null);
+		var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
+		mInputStream.init(istream);
+		var save_str = mInputStream.read(mInputStream.available());
+		istream.close();
+		mInputStream.close();
+		if(save_str.match(/\w[0-9a-z]{64}\w/gm)){
+			paid_txid = save_str.match(/\w[0-9a-z]{64}\w/gm);
+		}
 	}
-	else{
-		save_ch = "false";
-		check__line.setAttribute("checked", save_ch);
-	}
-	var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-	var prof = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("ProfD", Components.interfaces.nsIFile);
-	file.initWithPath(prof.path + "\\flag_save.txt");
-	var istream = input_stream();
-	istream.init(file, 0x01, 00660, null);
-	var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
-	mInputStream.init(istream);
-	var save_str = mInputStream.read(mInputStream.available());
-	istream.close();
-	mInputStream.close();
-	save_str = save_str.replace(/false|true/,save_ch);
-	var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
-	foStream.init(file, 0x02 | 0x20, 0660, null);
-	foStream.write(save_str,save_str.length);
-	foStream.close();
+	file.initWithPath(prof.path + "\\posts_save.txt");
+	if(file.exists()){
+		var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+		istream.init(file, 0x01, 00660, null);
+		var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
+		mInputStream.init(istream);
+		var save_str = mInputStream.read(mInputStream.available());
+		istream.close();
+		mInputStream.close();
+		if(save_str.match(/\w.*\w/gm)){
+			paid_posts = save_str.match(/\w.*\w/gm);
+		}
+	}	
 }
 
 function check_nova(novaPanel){
@@ -207,7 +205,28 @@ function check_user(novaPanel){
     novaPanel.label = "Nova: rpcuser=" + user_attr.rpcuser + ", rpcport=" + user_attr.rpcport;  
    
 		var prof = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("ProfD", Components.interfaces.nsIFile);
-    var file_name = prof.path + "\\extensions\\user_save.conf"; 
+		file.initWithPath(prof.path + "\\accnts_save.txt");
+		if(file.exists()){
+			var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+			istream.init(file, 0x01, 00660, null);
+			var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
+			mInputStream.init(istream);
+			var save_str = mInputStream.read(mInputStream.available());
+			istream.close();
+			mInputStream.close();
+			if(save_str.match(/\w[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*\w/g)){
+				enbl_accnts = save_str.match(/\w[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*\w/g);
+			}
+		}
+		else{
+			var save_str = "write to the following address of the account you want to use\r\n";
+			var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
+			foStream.init(file, 0x02 | 0x08 | 0x20, 0660, 0);
+			foStream.write(save_str, save_str.length);
+			foStream.close();
+		}
+
+    var file_name = prof.path + "\\extensions\\user_save.txt"; 
 		file.initWithPath(file_name);
 		if(file.exists()){
       novaPanel.label = "Nova: parsing " + file_name;
@@ -267,17 +286,17 @@ var txid = "";
 var msg_num = 0;
 var nova_inbox = { };
 var nova_trash = { };
+var acc_num = 0;
+var nova_acc = { };
+var nova_ident = { };
 //var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
 
 function request_payment(novaPanel,do_it){
-  if (1) return; // debug mode
-
-	var acctMgr = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 	novaPanel.label = "Nova: start request_payment";
 	var cf = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
-	cf.from = (ms_hr.mime2DecodedRecipients + ms_hr.recipients).match(/<[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*>/)[0].slice(1,-1);
-	cf.subject = rpl_subject;
-	cf.to = (ms_hr.mime2DecodedAuthor + ms_hr.author).match(/<[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*>/)[0].slice(1,-1);
+	cf.from = (ms_hr.mime2DecodedRecipients + " " + ms_hr.recipients).match(/[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*/)[0];
+	cf.subject = "требование оплаты";
+	cf.to = (ms_hr.mime2DecodedAuthor + " " + ms_hr.author).match(/[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*/)[0];
 	cf.body = do_it;
 //prompts.alert(null, cf.to, cf.body);
 	var params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
@@ -286,72 +305,121 @@ function request_payment(novaPanel,do_it){
 	var msgCompose = Components.classes["@mozilla.org/messengercompose/compose;1"].createInstance(Components.interfaces.nsIMsgCompose);
 	msgCompose.compFields = cf;
 	msgCompose.initialize(params,null);
-	msgCompose.SendMsg(msgSend.nsMsgDeliverNow, acctMgr.defaultAccount.defaultIdentity, acctMgr.defaultAccount.key, null, null);
-	request_posts.push(ms_hr.messageKey);
+	msgCompose.SendMsg(msgSend.nsMsgDeliverNow,nova_ident, nova_acc.key, null, null);
+	request_posts.push(ms_hr.messageId);
 	novaPanel.label = "Nova: end request_payment";
 	msg_num++;
 	window.setTimeout(function () {
 		start_msg(novaPanel);
-	},30);
+	},50);
 }
 
 function process_account(novaPanel){
 	novaPanel.label = "Nova: start process_account";
 	var acctMgr = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 	var accounts = acctMgr.accounts;
-	msg_num = 0;
-	var account = accounts.queryElementAt(0, Components.interfaces.nsIMsgAccount);
-	var rootFolder = account.incomingServer.rootFolder;
-	var has_inbox = 0;
-	var has_trash = 0;
-	if (rootFolder.hasSubFolders){
-		var subFolders = rootFolder.subFolders;
-		while(subFolders.hasMoreElements()){
-			var folder = subFolders.getNext().QueryInterface(Components.interfaces.nsIMsgFolder);
-			if(folder.name.match(/inbox|входящие/i)){
-				nova_inbox = folder;
-				has_inbox = 1;
+	novaPanel.label = "Nova: process_account " + accounts.length + acc_num;
+	if(acc_num < accounts.length){
+		msg_num = 0;
+		nova_acc = accounts.queryElementAt(acc_num, Components.interfaces.nsIMsgAccount);
+novaPanel.label = "Nova: process_account nova_acc";
+		if(enbl_accnts.indexOf(nova_acc.incomingServer.prettyName) != -1){
+			var identities = acctMgr.allIdentities;
+			var has_ident = false;
+novaPanel.label = "Nova: process_account has_ident";
+			for(var i = 0;i < identities.length;i++){
+				var identity = identities.queryElementAt(i,Components.interfaces.nsIMsgIdentity);
+				if(identity.email == nova_acc.incomingServer.prettyName){
+					nova_ident = identity;
+					has_ident = true;
+					break;
+				}
 			}
-			if(folder.name.match(/trash|корзина|удал[ёе]нные/i)){
-				nova_trash = folder;
-				has_trash = 1;
-			}
-			if(has_trash + has_inbox == 2){
-				break;
-			}
-			if(folder.hasSubFolders){
-				var gm = folder.subFolders;
-				while(gm.hasMoreElements()){
-					var s_f = gm.getNext().QueryInterface(Components.interfaces.nsIMsgFolder);
-					if(s_f.name.match(/inbox|входящие/i)){
-						nova_inbox = s_f;
-						has_inbox = 1;
+			if(has_ident){
+				var rootFolder = nova_acc.incomingServer.rootFolder;
+				var has_inbox = 0;
+				var has_trash = 0;
+novaPanel.label = "Nova: process_account has_trash";
+				if (rootFolder.hasSubFolders){
+					var subFolders = rootFolder.subFolders;
+					while(subFolders.hasMoreElements()){
+						var folder = subFolders.getNext().QueryInterface(Components.interfaces.nsIMsgFolder);
+						if(folder.name.match(/inbox|входящие/i)){
+							nova_inbox = folder;
+							has_inbox = 1;
+						}
+						if(folder.name.match(/trash|корзина|удал[ёе]нные/i)){
+							nova_trash = folder;
+							has_trash = 1;
+						}
+						if(has_trash + has_inbox == 2){
+							break;
+						}
+						if(folder.hasSubFolders){
+							var gm = folder.subFolders;
+							while(gm.hasMoreElements()){
+								var s_f = gm.getNext().QueryInterface(Components.interfaces.nsIMsgFolder);
+								if(s_f.name.match(/inbox|входящие/i)){
+									nova_inbox = s_f;
+									has_inbox = 1;
+								}
+								if(s_f.name.match(/trash|корзина|удал[её]нные/i)){
+									nova_trash = s_f;
+									has_trash = 1;
+								}
+							}
+						}
 					}
-					if(s_f.name.match(/trash|корзина|удал[её]нные/i)){
-						nova_trash = s_f;
-						has_trash = 1;
+				}
+				if(has_trash + has_inbox == 2){
+
+					var entries = nova_inbox.messages;
+					array_msg = [];
+
+					if(sync_ch == "false"){
+
+						while(entries.hasMoreElements()){
+							var entry = entries.getNext();
+							entry.QueryInterface(Components.interfaces.nsIMsgDBHdr);
+							var e_ml = (entry.mime2DecodedAuthor + " " + entry.author).match(/[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*/)[0];
+
+							if((paid_posts.indexOf(entry.messageId) == -1) && (request_posts.indexOf(entry.messageId) == -1) && (white_list.indexOf(e_ml) == -1)){
+								array_msg.push(entry);
+							}
+						}
 					}
+					else{
+						let abManager = Components.classes["@mozilla.org/abmanager;1"].getService(Components.interfaces.nsIAbManager);
+						let allAddressBooks = abManager.directories; 
+						let collection = allAddressBooks.getNext().QueryInterface(Components.interfaces.nsIAbCollection);
+						while(entries.hasMoreElements()){
+							var entry = entries.getNext();
+							entry.QueryInterface(Components.interfaces.nsIMsgDBHdr);
+							var e_ml = (entry.mime2DecodedAuthor + " " + entry.author).match(/[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*/)[0];
+							let card = collection.cardForEmailAddress(e_ml);
+							if(!card){
+								if((paid_posts.indexOf(entry.messageId) == -1) && (request_posts.indexOf(entry.messageId) == -1) && (white_list.indexOf(e_ml) == -1)){
+									array_msg.push(entry);
+								}
+							}
+						}
+					}
+					window.setTimeout(function () {
+						start_msg(novaPanel);
+					},10);
+
 				}
 			}
 		}
-	}
-	if(has_trash + has_inbox == 2){
-		var entries = nova_inbox.messages;
-		array_msg = [];
-    // verify message loop
-	  while(entries.hasMoreElements()){
-			var entry = entries.getNext();
-			entry.QueryInterface(Components.interfaces.nsIMsgDBHdr);
-			var e_ml = (entry.mime2DecodedAuthor + entry.author).match(/<[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*>/)[0].slice(1,-1);
-			if((paid_posts.indexOf(entry.messageKey) == -1) && (request_posts.indexOf(entry.messageKey) == -1) && (white_list.indexOf(e_ml) == -1)){
-			  	array_msg.push(entry);
-			}
+		else{
+			acc_num++;
+			window.setTimeout(function () {
+				process_account(novaPanel);
+			},10);
 		}
-		window.setTimeout(function () {
-			start_msg(novaPanel);
-		},10);
 	}
 	novaPanel.label = "Nova: end process_account";
+	rep_err(novaPanel);
 }
 
 function start_msg(novaPanel){
@@ -437,7 +505,7 @@ function process_message(novaPanel){
 			deleted++;
 		}
 	}
-	else if(paid_posts.indexOf(txid) != -1){
+	else if(paid_txid.indexOf(txid) != -1){
 		request_payment(novaPanel, err_double_use + txid + rpl_body_1 + price + rpl_body_2 + user_attr.address + rpl_body_3);
 		if(save_ch == "true"){
 			gFolderDisplay.selectMessage(ms_hr);
@@ -446,7 +514,7 @@ function process_message(novaPanel){
 		}
 	}
 	else{
-		paid_posts.push(ms_hr.messageKey);
+		paid_posts.push(ms_hr.messageId);
 		paid_txid.push(txid);
 		msg_num++;
 		novaPanel.label = "Nova: paid message"; 
@@ -460,8 +528,13 @@ function process_message(novaPanel){
 function check_mail(novaPanel){
 	novaPanel.label = "Nova: start check mail";
 	if(global_error == 3){
-		process_account(novaPanel);
-	
+		acc_num = 0;
+		if(enbl_accnts.length != 0){
+			process_account(novaPanel);
+		}
+		else{
+			novaPanel.label = "Необходимо выбрать аккаунт(ы) для использования.Воспользуйтесь пунктом управление аккаунтами nova_antispam";
+		}
 	}
 	else if(global_error == 0){
 		novaPanel.label = err_client_not_run + "(check_mail)";
