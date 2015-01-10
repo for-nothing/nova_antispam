@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <overlay id="nova_antispam" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script type="application/javascript" src="chrome://nova_antispam/content/lang_ru.js"/>
 <script type="application/javascript" src="chrome://nova_antispam/content/overlay.js"/>
-<script type="application/javascript" src="chrome://nova_antispam/content/seting.js"/>
+<script type="application/javascript" src="chrome://nova_antispam/content/settings.js"/>
  <menupopup id="taskPopup">
   <menuitem id="removeUnpaidPosts" type="checkbox" label="Удалять неоплаченные сообщения" command="save_check()" checked="false"/>
   <menuitem id="setnvcPrice" label="Указать требуемую сумму nvc"/>
