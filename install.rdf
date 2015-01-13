@@ -11,7 +11,7 @@
 
   <em:id>nova_antispam@novaco.in</em:id>
 
-  <em:version>0.13</em:version>
+  <em:version>0.14</em:version>
 
   <em:type>2</em:type>
   
@@ -34,9 +34,11 @@
 
   <em:name>Novacoin Antispam</em:name>
 
-  <em:description>Keep a correspondence with only the well off people</em:description>
+  <em:description>Keep a correspondence with only the well off people.
+      For donate 4VgkLjNQHDcawXbvuTry3X4V2WEXP66vay 
+  </em:description>
 
-  <em:creator>For donate 4VgkLjNQHDcawXbvuTry3X4V2WEXP66vay</em:creator>
+  <em:creator>For-nothing</em:creator>
 
   <em:homepageURL>http://www.novaco.in/</em:homepageURL>
  </Description>
