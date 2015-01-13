@@ -1,3 +1,4 @@
 
 content     nova_antispam    content/
 overlay chrome://messenger/content/messenger.xul chrome://nova_antispam/content/overlay.xul
+locale nova_antispam ru-RU locale/ru/
