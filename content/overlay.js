@@ -461,7 +461,7 @@ function start_msg(novaPanel){
 		let messenger = Components.classes["@mozilla.org/messenger;1"].createInstance(Components.interfaces.nsIMessenger);
 		let listener = Components.classes["@mozilla.org/network/sync-stream-listener;1"].createInstance(Components.interfaces.nsISyncStreamListener);
 		messenger.messageServiceFromURI(uri_m).streamMessage(uri_m, listener, null, null, false, "");
-		var mssg = nova_inbox.getMsgTextFromStream(listener.inputStream,ms_hr.Charset,ms_hr.messageSize,ms_hr.offlineMessageSize,false,true,{ });
+		var mssg = nova_inbox.getMsgTextFromStream(listener.inputStream,ms_hr.Charset,ms_hr.messageSize,ms_hr.messageSize,false,true,{ });
 		if(mssg.match(/[0-9a-z]{64}/)){
 //prompts.alert(null, "", "match txid" );
 			novaPanel.label = err_client_not_run + "(start_msg)";
