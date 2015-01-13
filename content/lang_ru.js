@@ -30,7 +30,16 @@ msg_bellow                   = " меньше ";
 msg_and_letter_del           = " и ваше письмо удалено ";
 err_no_comission             = "Вы отправили NVC без комиссии и ваше письмо удалено. ";
 err_double_use               = "Письмо удалено по причине: попытка повтороно использовать ID транзакции ";
-
+no_selected_accounts         = "Необходимо выбрать аккаунт(ы) для использования.Воспользуйтесь пунктом управление аккаунтами nova_antispam";
+account_management           = "управление аккаунтами";
+detected_account             = "На вашем клиенте thunderbird обнаружен аккаунт ";
+like_to_use                  = ".Желаете использовать на нём nova_antispam?";
+amount_nvc                   = "количество nvc";
+enter_amount                 = "Введите требуемое количество nvc";
+address_nvc                  = "адрес nvc";
+enter_address_nvc            = "Введите адрес nvc";
+address_eml                  = "адрес email";
+enter_address_eml            = "Введите адрес email(вы можете ввести несколько адресов,разделяя их пробелом)";
                
                 
                  
