@@ -58,11 +58,16 @@ var paid_txid = [];
 var sync_ch = "true";
 var enbl_accnts = [];
 
-
 function get_save(){
 	var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 	var prof = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("ProfD", Components.interfaces.nsIFile);
-	file.initWithPath(prof.path + "\\flag_save013.txt");
+	if(prof.path.match("/")){
+		var slash = "/";
+	}
+	else{
+		var slash = "\\";
+	}
+	file.initWithPath(prof.path + slash + "flag_save013.txt");
 	if(file.exists()){
 		var istream = input_stream();
 		istream.init(file, 0x01, 00660, null);
@@ -81,7 +86,8 @@ function get_save(){
 		sync_book.setAttribute("checked", sync_ch);
 		var sync__book = document.getElementById("sync_AddrBook");
 		sync__book.setAttribute("checked", sync_ch);
-	}else{
+	}
+	else{
 		save_ch = "false";
 		sync_ch = "true";
 		var sync_book = document.getElementById("syncAddrBook");
@@ -98,7 +104,7 @@ function get_save(){
 		foStream.write(save_str, save_str.length);
 		foStream.close();
 	}
-	file.initWithPath(prof.path + "\\txid_save.txt");
+	file.initWithPath(prof.path + slash + "txid_save.txt");
 	if(file.exists()){
 		var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
 		istream.init(file, 0x01, 00660, null);
@@ -111,7 +117,7 @@ function get_save(){
 			paid_txid = save_str.match(/\w[0-9a-z]{64}\w/gm);
 		}
 	}
-	file.initWithPath(prof.path + "\\posts_save.txt");
+	file.initWithPath(prof.path + slash + "posts_save.txt");
 	if(file.exists()){
 		var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
 		istream.init(file, 0x01, 00660, null);
@@ -123,13 +129,20 @@ function get_save(){
 		if(save_str.match(/\w.*\w/gm)){
 			paid_posts = save_str.match(/\w.*\w/gm);
 		}
-	}	
+	}
 }
+
 
 function check_nova(novaPanel){
 	var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 	var roaming = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("AppData", Components.interfaces.nsIFile);
-	file.initWithPath(roaming.path+"\\NovaCoin\\");
+	if(home.path.match("/")){
+		var nova = "/.novacoin";
+	}
+	else{
+		var nova = "\\AppData\\Roaming\\NovaCoin\\";
+	}
+	file.initWithPath(home.path + nova);
 	if(!file.exists()){
 		global_error = 1;
 		var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
@@ -148,8 +161,14 @@ function check_nova(novaPanel){
 function check_conf(novaPanel){
 	if(!global_error){
 		var file = local_file();
-		var roaming = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("AppData", Components.interfaces.nsIFile);
-		file.initWithPath(roaming.path+"\\NovaCoin\\novacoin.conf");
+		var home = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("Home", Components.interfaces.nsIFile);
+		if(home.path.match("/")){
+			var nova = "/.novacoin/novacoin.conf";
+		}
+		else{
+			var nova = "\\AppData\\Roaming\\NovaCoin\\novacoin.conf";
+		}
+		file.initWithPath(home.path + nova);
 		if(!file.exists()){
 			global_error = 2;
 			var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
@@ -180,16 +199,20 @@ function check_conf(novaPanel){
 	}
 }
 
-
-
 function check_user(novaPanel){
-  novaPanel.label = "Nova: check user 0";
-	if(!global_error){     
+	novaPanel.label = "Nova: check user 0";
+	if(!global_error){
 		var file = local_file();
-		var roaming = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("AppData", Components.interfaces.nsIFile);
-    novaPanel.label = "Nova: AppData = " + roaming.path;    
-		file.initWithPath(roaming.path+"\\NovaCoin\\novacoin.conf");
-    
+		var home = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("Home", Components.interfaces.nsIFile);
+		if(home.path.match("/")){
+			var slash = "/";
+			var nova = "/.novacoin/novacoin.conf";
+		}
+		else{
+			var slash = "\\";
+			var nova = "\\AppData\\Roaming\\NovaCoin\\novacoin.conf";
+		}
+		file.initWithPath(home.path + nova);
 		var istream = input_stream();
 		istream.init(file, 0x01, 00660, null);
 		var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
@@ -198,14 +221,13 @@ function check_user(novaPanel){
 		istream.close();
 		mInputStream.close();
 		user_attr.rpcuser = conf.match(/^rpcuser.*\w/gm)[0].slice(8);
-		user_attr.rpcpassword =  conf.match(/^rpcpassword.*\w/gm)[0].slice(12);
+		user_attr.rpcpassword = conf.match(/^rpcpassword.*\w/gm)[0].slice(12);
 		user_attr.rpcallowip = conf.match(/^rpcallowip.*\w/gm)[0].slice(11);
-    var v = conf.match(/^rpcport.*\w/gm)[0].slice(8); 
-    if (v) user_attr.rpcport = v;
-    novaPanel.label = "Nova: rpcuser=" + user_attr.rpcuser + ", rpcport=" + user_attr.rpcport;  
-   
+		var v = conf.match(/^rpcport.*\w/gm)[0].slice(8);
+		if (v) user_attr.rpcport = v;
+		novaPanel.label = "Nova: rpcuser=" + user_attr.rpcuser + ", rpcport=" + user_attr.rpcport;
 		var prof = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("ProfD", Components.interfaces.nsIFile);
-		file.initWithPath(prof.path + "\\accnts_save.txt");
+		file.initWithPath(prof.path + slash + "accnts_save.txt");
 		if(file.exists()){
 			var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
 			istream.init(file, 0x01, 00660, null);
@@ -225,11 +247,10 @@ function check_user(novaPanel){
 			foStream.write(save_str, save_str.length);
 			foStream.close();
 		}
-
-    var file_name = prof.path + "\\extensions\\user_save.txt"; 
+		var file_name = prof.path + slash + "user_save.txt";
 		file.initWithPath(file_name);
 		if(file.exists()){
-      novaPanel.label = "Nova: parsing " + file_name;
+			novaPanel.label = "Nova: parsing " + file_name;
 			var istream = input_stream();
 			istream.init(file, 0x01, 00660, null);
 			var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
@@ -241,8 +262,9 @@ function check_user(novaPanel){
 				price = parseFloat(save_str.match(/^price=.*\w/gm)[0].slice(6).replace(",","."));
 			}
 			if(save_str.match(/\w[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*\w/g)){
-				white_list = save_str.match(/\w[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*\w/g);}
-			if(save_str.match(/address=4[a-z0-9A-Z]{33}/)){
+				white_list = save_str.match(/\w[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*\w/g);
+			}
+			if(save_str.match(/addres+=4[a-z0-9A-Z]{33}/)){
 				user_attr.address = save_str.match(/4[a-z0-9A-Z]{33}/)[0];
 				global_error = 3;
 			}
@@ -278,6 +300,7 @@ function check_user(novaPanel){
 	}
 }
 
+
 ms_hr = { };
 var msg_num = 0;
 var array_msg = [];
@@ -289,13 +312,14 @@ var nova_trash = { };
 var acc_num = 0;
 var nova_acc = { };
 var nova_ident = { };
+var start_fold = { };
 //var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
 
 function request_payment(novaPanel,do_it){
 	novaPanel.label = "Nova: start request_payment";
 	var cf = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
 	cf.from = (ms_hr.mime2DecodedRecipients + " " + ms_hr.recipients).match(/[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*/)[0];
-	cf.subject = "требование оплаты";
+	cf.subject = ms_hr.mime2DecodedSubject;
 	cf.to = (ms_hr.mime2DecodedAuthor + " " + ms_hr.author).match(/[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*/)[0];
 	cf.body = do_it;
 //prompts.alert(null, cf.to, cf.body);
@@ -311,7 +335,7 @@ function request_payment(novaPanel,do_it){
 	msg_num++;
 	window.setTimeout(function () {
 		start_msg(novaPanel);
-	},50);
+	},140);
 }
 
 function process_account(novaPanel){
@@ -322,13 +346,13 @@ function process_account(novaPanel){
 	if(acc_num < accounts.length){
 		msg_num = 0;
 		nova_acc = accounts.queryElementAt(acc_num, Components.interfaces.nsIMsgAccount);
-novaPanel.label = "Nova: process_account nova_acc";
+		novaPanel.label = "Nova: process_account nova_acc";
 		if(enbl_accnts.indexOf(nova_acc.incomingServer.prettyName) != -1){
 			var identities = acctMgr.allIdentities;
 			var has_ident = false;
-novaPanel.label = "Nova: process_account has_ident";
+			novaPanel.label = "Nova: process_account has_ident";
 			for(var i = 0;i < identities.length;i++){
-				var identity = identities.queryElementAt(i,Components.interfaces.nsIMsgIdentity);
+			var identity = identities.queryElementAt(i,Components.interfaces.nsIMsgIdentity);
 				if(identity.email == nova_acc.incomingServer.prettyName){
 					nova_ident = identity;
 					has_ident = true;
@@ -339,7 +363,7 @@ novaPanel.label = "Nova: process_account has_ident";
 				var rootFolder = nova_acc.incomingServer.rootFolder;
 				var has_inbox = 0;
 				var has_trash = 0;
-novaPanel.label = "Nova: process_account has_trash";
+				novaPanel.label = "Nova: process_account has_trash";
 				if (rootFolder.hasSubFolders){
 					var subFolders = rootFolder.subFolders;
 					while(subFolders.hasMoreElements()){
@@ -372,17 +396,13 @@ novaPanel.label = "Nova: process_account has_trash";
 					}
 				}
 				if(has_trash + has_inbox == 2){
-
 					var entries = nova_inbox.messages;
 					array_msg = [];
-
 					if(sync_ch == "false"){
-
 						while(entries.hasMoreElements()){
 							var entry = entries.getNext();
 							entry.QueryInterface(Components.interfaces.nsIMsgDBHdr);
 							var e_ml = (entry.mime2DecodedAuthor + " " + entry.author).match(/[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*/)[0];
-
 							if((paid_posts.indexOf(entry.messageId) == -1) && (request_posts.indexOf(entry.messageId) == -1) && (white_list.indexOf(e_ml) == -1)){
 								array_msg.push(entry);
 							}
@@ -390,7 +410,7 @@ novaPanel.label = "Nova: process_account has_trash";
 					}
 					else{
 						let abManager = Components.classes["@mozilla.org/abmanager;1"].getService(Components.interfaces.nsIAbManager);
-						let allAddressBooks = abManager.directories; 
+						let allAddressBooks = abManager.directories;
 						let collection = allAddressBooks.getNext().QueryInterface(Components.interfaces.nsIAbCollection);
 						while(entries.hasMoreElements()){
 							var entry = entries.getNext();
@@ -404,10 +424,10 @@ novaPanel.label = "Nova: process_account has_trash";
 							}
 						}
 					}
+					
 					window.setTimeout(function () {
 						start_msg(novaPanel);
 					},10);
-
 				}
 			}
 		}
@@ -418,14 +438,23 @@ novaPanel.label = "Nova: process_account has_trash";
 			},10);
 		}
 	}
+	else{
+		if(start_fold){
+			gFolderTreeView.selectFolder(start_fold);
+		}
+		window.setTimeout(function () {
+			rep_err(novaPanel);
+		},60);
+	}
 	novaPanel.label = "Nova: end process_account";
-	rep_err(novaPanel);
 }
+
 
 function start_msg(novaPanel){
 //prompts.alert(null, "", "start start_msg " + msg_num + " " + array_msg.length + " " + nova_inbox.URI );
 	novaPanel.label = "Nova: start start_msg";
 	if(msg_num < array_msg.length){
+		gFolderTreeView.selectFolder(nova_inbox);
 		novaPanel.label = "Nova: work start_msg, in array";
 		ms_hr = array_msg[msg_num];
 		var uri_m = nova_inbox.getUriForMsg(ms_hr);
@@ -456,19 +485,22 @@ function start_msg(novaPanel){
 		else{
 			request_payment(novaPanel, rpl_body_1 + price + rpl_body_2 + user_attr.address + rpl_body_3);
 			if(save_ch == "true"){
-				gFolderDisplay.selectMessage(ms_hr);
-				MsgMoveMessage(nova_trash);
-				deleted++;
+				window.setTimeout(function () {
+					gFolderDisplay.selectMessage(ms_hr);
+					MsgMoveMessage(nova_trash);
+					deleted++;
+				},70);
 			}
 		}
 	}
 	else{
-		novaPanel.label = "Nova: end start_msg";
+		acc_num++;
 		window.setTimeout(function () {
-			rep_err(novaPanel);
-		},60);
+			process_account(novaPanel);
+		},10);
 	}
 }
+
 
 function process_message(novaPanel){
 //prompts.alert(null, "", "start process_message" );
@@ -476,48 +508,58 @@ function process_message(novaPanel){
 	if(tranz.error && (tranz.error.code == -5)){
 		request_payment(novaPanel, err_incorrect_txid);
 		if(save_ch == "true"){
-			gFolderDisplay.selectMessage(ms_hr);
-			MsgMoveMessage(nova_trash);
-			deleted++;
+			window.setTimeout(function () {
+				gFolderDisplay.selectMessage(ms_hr);
+				MsgMoveMessage(nova_trash);
+				deleted++;
+			},70);
 		}
 	}
 	else if(tranz.result.details[0].address != user_attr.address){
 		request_payment(novaPanel, err_wrong_target + price + rpl_body_2s + user_attr.address + rpl_body_3);
 		if(save_ch == "true"){
-			gFolderDisplay.selectMessage(ms_hr);
-			MsgMoveMessage(nova_trash);
-			deleted++;
+			window.setTimeout(function () {
+				gFolderDisplay.selectMessage(ms_hr);
+				MsgMoveMessage(nova_trash);
+				deleted++;
+			},70);
 		}
 	}
 	else if(tranz.result.amount < price){
 		request_payment(novaPanel, msg_u_send_to + user_attr.address + msg_bellow + price + " NVC" + rpl_body_1 + price + rpl_body_2d + rpl_body_3);
 		if(save_ch == "true"){
-			gFolderDisplay.selectMessage(ms_hr);
-			MsgMoveMessage(nova_trash);
-			deleted++;
+			window.setTimeout(function () {
+				gFolderDisplay.selectMessage(ms_hr);
+				MsgMoveMessage(nova_trash);
+				deleted++;
+			},70);
 		}
 	}
-	else if(tranz.result.vout[0].value == 0){
+	else if(tranz.result.vout[0].value == 0){	
 		request_payment(novaPanel, err_no_comission + rpl_body_1 + price + rpl_body_2 + user_attr.address + rpl_body_3);
 		if(save_ch == "true"){
-			gFolderDisplay.selectMessage(ms_hr);
-			MsgMoveMessage(nova_trash);
-			deleted++;
+			window.setTimeout(function () {
+				gFolderDisplay.selectMessage(ms_hr);
+				MsgMoveMessage(nova_trash);
+				deleted++;
+			},70);
 		}
 	}
 	else if(paid_txid.indexOf(txid) != -1){
 		request_payment(novaPanel, err_double_use + txid + rpl_body_1 + price + rpl_body_2 + user_attr.address + rpl_body_3);
 		if(save_ch == "true"){
-			gFolderDisplay.selectMessage(ms_hr);
-			MsgMoveMessage(nova_trash);
-			deleted++;
+			window.setTimeout(function () {
+				gFolderDisplay.selectMessage(ms_hr);
+				MsgMoveMessage(nova_trash);
+				deleted++;
+			},70);
 		}
 	}
 	else{
 		paid_posts.push(ms_hr.messageId);
 		paid_txid.push(txid);
 		msg_num++;
-		novaPanel.label = "Nova: paid message"; 
+		novaPanel.label = "Nova: paid message";
 		window.setTimeout(function () {
 			start_msg(novaPanel);
 		},10);
@@ -525,15 +567,17 @@ function process_message(novaPanel){
 }
 
 
+
 function check_mail(novaPanel){
 	novaPanel.label = "Nova: start check mail";
 	if(global_error == 3){
 		acc_num = 0;
 		if(enbl_accnts.length != 0){
+			start_fold = gFolderDisplay.displayedFolder;
 			process_account(novaPanel);
 		}
 		else{
-			novaPanel.label = "Необходимо выбрать аккаунт(ы) для использования.Воспользуйтесь пунктом управление аккаунтами nova_antispam";
+			novaPanel.label = no_selected_accounts;
 		}
 	}
 	else if(global_error == 0){
