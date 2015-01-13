@@ -1,0 +1,6 @@
+<!ENTITY msg_remove_unpaid "Удалять неоплаченные сообщения">
+<!ENTITY menu_amount_nvc "Указать требуемую сумму nvc">
+<!ENTITY menu_address_nvc "Указать адрес для получения nvc">
+<!ENTITY menu_address_eml "Добавить разрешённый email">
+<!ENTITY menu_sync_addr_book "Синхронизировать nova_antispam с адресной книгой">
+<!ENTITY menu_acc_management "Управление аккаунтами">
