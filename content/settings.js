@@ -26,12 +26,12 @@ window.addEventListener("load",function(){
 	var check_line = document.getElementById("removeUnpaidPosts");
 	check_line.addEventListener("command",function(){
 		save_check("remove_unpaidPosts");
-		check_mail(novaPanel);
+		check_mail(nova_panel());
 	},false);
 	var check__line = document.getElementById("remove_unpaidPosts");
 	check__line.addEventListener("click",function(){
 		save_check("removeUnpaidPosts");
-		check_mail(novaPanel);
+		check_mail(nova_panel());
 	},false);
 	var sync_book = document.getElementById("syncAddrBook");
 	sync_book.addEventListener("command",function(){
@@ -45,13 +45,13 @@ window.addEventListener("load",function(){
 	accManagement.addEventListener("command",function(){
 		accIdNum = 0;
 		enbl_accnts = [];
-		acc_mngmnt(novaPanel);
+		acc_mngmnt();
 	}, false);
 	var acc_Management = document.getElementById("acc_Management");
 	acc_Management.addEventListener("click",function(){
 		accIdNum = 0;
 		enbl_accnts = [];
-		acc_mngmnt(novaPanel);
+		acc_mngmnt();
 	}, false);
 }, false);
 window.addEventListener("unload",function(){
@@ -59,7 +59,7 @@ window.addEventListener("unload",function(){
 	save_posts();
 }, false);
 
-function acc_mngmnt(novaPanel){
+function acc_mngmnt(){
 	var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
 	var acctMgr = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 	var identities = acctMgr.allIdentities;
@@ -95,9 +95,9 @@ function acc_mngmnt(novaPanel){
 		foStream.init(file, 0x02 | 0x08 | 0x20, 0660, 0);
 		foStream.write(acc_write, acc_write.length);
 		foStream.close();
-		
+		check_mail(nova_panel());
 	}
-	check_mail(novaPanel);
+	
 }
 
 function save_posts(){
@@ -303,3 +303,7 @@ function save_sync(id_name){
 	foStream.write(save_str,save_str.length);
 	foStream.close();
 }
+
+
+
+
