@@ -1,46 +1,37 @@
 function conmsg(msg){
- if (console)
-     console.log(msg);
+	if (console)
+	console.log(msg);
 }
 
 function local_file(){
-   return Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);         
+	return Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 }
-
 function input_stream() {
-   return Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+	return Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
 }
-
-
 function rep_err(novaPanel){
 	novaPanel.label = "Nova: " + request_posts.length + " " + msg_letters_pay + ", " + deleted + msg_letters_del + ", " + paid_posts.length + " " + msg_paid;
 }
-
-window.addEventListener("load",function(){ 
+window.addEventListener("load",function(){
 	var novaPanel = document.getElementById("nova-panel");
-  novaPanel.minWidth=200;
-	novaPanel.label = msg_status_alive;  
+	novaPanel.minWidth=200;
+//	novaPanel.label = msg_status_alive;
 	get_save();
-	novaPanel.label = "Nova: get_save";
-
- 
-  conmsg("nova_antispam load in progress..."); 
-	novaPanel.label = "Nova: check__line register";
+//	novaPanel.label = "Nova: get_save";
+	conmsg("nova_antispam load in progress...");
 	check_nova(novaPanel);
-	novaPanel.label = "Nova: check_nova";
+//	novaPanel.label = "Nova: check_nova";
 	check_conf(novaPanel);
-	novaPanel.label = err_client_not_run + "(load)"; 
+//	novaPanel.label = err_client_not_run + "(load)";
 	check_user(novaPanel);
-	novaPanel.label = "Nova: check_user";
+//	novaPanel.label = "Nova: check_user";
 	check_mail(novaPanel);
-	novaPanel.label = "Nova: check_mail";
+//	novaPanel.label = "Nova: check_mail";
 	window.setInterval(function(){
-		check_mail(novaPanel); 
+		check_mail(nova_panel());
 	}, 60000);
-	rep_err(novaPanel);
 }, false);
-
-var novaPanel = document.getElementById("nova-panel");
+//var novaPanel = document.getElementById("nova-panel");
 var global_error = 0;
 var user_attr = { };
 user_attr.rpcuser = "";
@@ -48,7 +39,7 @@ user_attr.rpcpassword = "";
 user_attr.rpcallowip = "";
 user_attr.rpcport = "8344";
 user_attr.address = "";
-var save_ch = "     ";
+var save_ch = " ";
 var paid_posts = [];
 var request_posts = [];
 var deleted = 0;
@@ -57,6 +48,10 @@ var price = 0.1;
 var paid_txid = [];
 var sync_ch = "true";
 var enbl_accnts = [];
+
+function nova_panel(){
+return document.getElementById("nova-panel");
+}
 
 function get_save(){
 	var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
@@ -132,10 +127,9 @@ function get_save(){
 	}
 }
 
-
 function check_nova(novaPanel){
 	var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-	var roaming = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("AppData", Components.interfaces.nsIFile);
+	var home = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("Home", Components.interfaces.nsIFile);
 	if(home.path.match("/")){
 		var nova = "/.novacoin";
 	}
@@ -200,7 +194,7 @@ function check_conf(novaPanel){
 }
 
 function check_user(novaPanel){
-	novaPanel.label = "Nova: check user 0";
+//	novaPanel.label = "Nova: check user 0";
 	if(!global_error){
 		var file = local_file();
 		var home = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("Home", Components.interfaces.nsIFile);
@@ -250,7 +244,7 @@ function check_user(novaPanel){
 		var file_name = prof.path + slash + "user_save.txt";
 		file.initWithPath(file_name);
 		if(file.exists()){
-			novaPanel.label = "Nova: parsing " + file_name;
+//			novaPanel.label = "Nova: parsing " + file_name;
 			var istream = input_stream();
 			istream.init(file, 0x01, 00660, null);
 			var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
@@ -300,7 +294,6 @@ function check_user(novaPanel){
 	}
 }
 
-
 ms_hr = { };
 var msg_num = 0;
 var array_msg = [];
@@ -313,10 +306,11 @@ var acc_num = 0;
 var nova_acc = { };
 var nova_ident = { };
 var start_fold = { };
+
 //var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
 
 function request_payment(novaPanel,do_it){
-	novaPanel.label = "Nova: start request_payment";
+//	novaPanel.label = "Nova: start request_payment";
 	var cf = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
 	cf.from = (ms_hr.mime2DecodedRecipients + " " + ms_hr.recipients).match(/[а-яА-Яa-z0-9A-Z-_.]*@[а-яА-Яa-z0-9A-Z-_.]*/)[0];
 	cf.subject = ms_hr.mime2DecodedSubject;
@@ -331,26 +325,26 @@ function request_payment(novaPanel,do_it){
 	msgCompose.initialize(params,null);
 	msgCompose.SendMsg(msgSend.nsMsgDeliverNow,nova_ident, nova_acc.key, null, null);
 	request_posts.push(ms_hr.messageId);
-	novaPanel.label = "Nova: end request_payment";
+//	novaPanel.label = "Nova: end request_payment";
 	msg_num++;
 	window.setTimeout(function () {
-		start_msg(novaPanel);
+		start_msg(nova_panel());
 	},140);
 }
 
 function process_account(novaPanel){
-	novaPanel.label = "Nova: start process_account";
+//	novaPanel.label = "Nova: start process_account";
 	var acctMgr = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 	var accounts = acctMgr.accounts;
-	novaPanel.label = "Nova: process_account " + accounts.length + acc_num;
+//	novaPanel.label = "Nova: process_account " + accounts.length + acc_num;
 	if(acc_num < accounts.length){
 		msg_num = 0;
 		nova_acc = accounts.queryElementAt(acc_num, Components.interfaces.nsIMsgAccount);
-		novaPanel.label = "Nova: process_account nova_acc";
+//		novaPanel.label = "Nova: process_account nova_acc";
 		if(enbl_accnts.indexOf(nova_acc.incomingServer.prettyName) != -1){
 			var identities = acctMgr.allIdentities;
 			var has_ident = false;
-			novaPanel.label = "Nova: process_account has_ident";
+//			novaPanel.label = "Nova: process_account has_ident";
 			for(var i = 0;i < identities.length;i++){
 			var identity = identities.queryElementAt(i,Components.interfaces.nsIMsgIdentity);
 				if(identity.email == nova_acc.incomingServer.prettyName){
@@ -363,7 +357,7 @@ function process_account(novaPanel){
 				var rootFolder = nova_acc.incomingServer.rootFolder;
 				var has_inbox = 0;
 				var has_trash = 0;
-				novaPanel.label = "Nova: process_account has_trash";
+//				novaPanel.label = "Nova: process_account has_trash";
 				if (rootFolder.hasSubFolders){
 					var subFolders = rootFolder.subFolders;
 					while(subFolders.hasMoreElements()){
@@ -426,7 +420,7 @@ function process_account(novaPanel){
 					}
 					
 					window.setTimeout(function () {
-						start_msg(novaPanel);
+						start_msg(nova_panel());
 					},10);
 				}
 			}
@@ -434,7 +428,7 @@ function process_account(novaPanel){
 		else{
 			acc_num++;
 			window.setTimeout(function () {
-				process_account(novaPanel);
+				process_account(nova_panel());
 			},10);
 		}
 	}
@@ -443,19 +437,18 @@ function process_account(novaPanel){
 			gFolderTreeView.selectFolder(start_fold);
 		}
 		window.setTimeout(function () {
-			rep_err(novaPanel);
+			rep_err(nova_panel());
 		},60);
 	}
-	novaPanel.label = "Nova: end process_account";
+//	novaPanel.label = "Nova: end process_account";
 }
-
 
 function start_msg(novaPanel){
 //prompts.alert(null, "", "start start_msg " + msg_num + " " + array_msg.length + " " + nova_inbox.URI );
-	novaPanel.label = "Nova: start start_msg";
+//	novaPanel.label = "Nova: start start_msg";
 	if(msg_num < array_msg.length){
 		gFolderTreeView.selectFolder(nova_inbox);
-		novaPanel.label = "Nova: work start_msg, in array";
+//		novaPanel.label = "Nova: work start_msg, in array";
 		ms_hr = array_msg[msg_num];
 		var uri_m = nova_inbox.getUriForMsg(ms_hr);
 		let messenger = Components.classes["@mozilla.org/messenger;1"].createInstance(Components.interfaces.nsIMessenger);
@@ -473,17 +466,17 @@ function start_msg(novaPanel){
 			if(req.readyState == 4){
 				tranz = JSON.parse(req.responseText);
 				window.setTimeout(function () {
-					process_message(novaPanel);
+					process_message(nova_panel());
 				},10);
 			}
 			else{
 				window.setTimeout(function () {
-					start_msg(novaPanel);
+					start_msg(nova_panel());
 				},30);
 			}
 		}
 		else{
-			request_payment(novaPanel, rpl_body_1 + price + rpl_body_2 + user_attr.address + rpl_body_3);
+			request_payment(nova_panel(), rpl_body_1 + price + rpl_body_2 + user_attr.address + rpl_body_3);
 			if(save_ch == "true"){
 				window.setTimeout(function () {
 					gFolderDisplay.selectMessage(ms_hr);
@@ -496,17 +489,16 @@ function start_msg(novaPanel){
 	else{
 		acc_num++;
 		window.setTimeout(function () {
-			process_account(novaPanel);
+			process_account(nova_panel());
 		},10);
 	}
 }
 
-
 function process_message(novaPanel){
 //prompts.alert(null, "", "start process_message" );
-	novaPanel.label = "Nova: start process_message";
+//	novaPanel.label = "Nova: start process_message";
 	if(tranz.error && (tranz.error.code == -5)){
-		request_payment(novaPanel, err_incorrect_txid);
+		request_payment(nova_panel(), err_incorrect_txid);
 		if(save_ch == "true"){
 			window.setTimeout(function () {
 				gFolderDisplay.selectMessage(ms_hr);
@@ -516,7 +508,7 @@ function process_message(novaPanel){
 		}
 	}
 	else if(tranz.result.details[0].address != user_attr.address){
-		request_payment(novaPanel, err_wrong_target + price + rpl_body_2s + user_attr.address + rpl_body_3);
+		request_payment(nova_panel(), err_wrong_target + price + rpl_body_2s + user_attr.address + rpl_body_3);
 		if(save_ch == "true"){
 			window.setTimeout(function () {
 				gFolderDisplay.selectMessage(ms_hr);
@@ -526,7 +518,7 @@ function process_message(novaPanel){
 		}
 	}
 	else if(tranz.result.amount < price){
-		request_payment(novaPanel, msg_u_send_to + user_attr.address + msg_bellow + price + " NVC" + rpl_body_1 + price + rpl_body_2d + rpl_body_3);
+		request_payment(nova_panel(), msg_u_send_to + user_attr.address + msg_bellow + price + " NVC" + rpl_body_1 + price + rpl_body_2d + rpl_body_3);
 		if(save_ch == "true"){
 			window.setTimeout(function () {
 				gFolderDisplay.selectMessage(ms_hr);
@@ -536,7 +528,7 @@ function process_message(novaPanel){
 		}
 	}
 	else if(tranz.result.vout[0].value == 0){	
-		request_payment(novaPanel, err_no_comission + rpl_body_1 + price + rpl_body_2 + user_attr.address + rpl_body_3);
+		request_payment(nova_panel(), err_no_comission + rpl_body_1 + price + rpl_body_2 + user_attr.address + rpl_body_3);
 		if(save_ch == "true"){
 			window.setTimeout(function () {
 				gFolderDisplay.selectMessage(ms_hr);
@@ -546,7 +538,7 @@ function process_message(novaPanel){
 		}
 	}
 	else if(paid_txid.indexOf(txid) != -1){
-		request_payment(novaPanel, err_double_use + txid + rpl_body_1 + price + rpl_body_2 + user_attr.address + rpl_body_3);
+		request_payment(nova_panel(), err_double_use + txid + ". " + rpl_body_1 + price + rpl_body_2 + user_attr.address + rpl_body_3);
 		if(save_ch == "true"){
 			window.setTimeout(function () {
 				gFolderDisplay.selectMessage(ms_hr);
@@ -559,22 +551,20 @@ function process_message(novaPanel){
 		paid_posts.push(ms_hr.messageId);
 		paid_txid.push(txid);
 		msg_num++;
-		novaPanel.label = "Nova: paid message";
+//		novaPanel.label = "Nova: paid message";
 		window.setTimeout(function () {
-			start_msg(novaPanel);
+			start_msg(nova_panel());
 		},10);
 	}
 }
 
-
-
 function check_mail(novaPanel){
-	novaPanel.label = "Nova: start check mail";
+//	novaPanel.label = "Nova: start check mail";
 	if(global_error == 3){
 		acc_num = 0;
 		if(enbl_accnts.length != 0){
 			start_fold = gFolderDisplay.displayedFolder;
-			process_account(novaPanel);
+			process_account(nova_panel());
 		}
 		else{
 			novaPanel.label = no_selected_accounts;
