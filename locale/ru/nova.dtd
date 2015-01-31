@@ -4,3 +4,4 @@
 <!ENTITY menu_address_eml "Добавить разрешённый email">
 <!ENTITY menu_sync_addr_book "Синхронизировать nova_antispam с адресной книгой">
 <!ENTITY menu_acc_management "Управление аккаунтами">
+<!ENTITY pay_letter "Оплатить">
