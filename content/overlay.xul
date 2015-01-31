@@ -32,6 +32,9 @@
    </menu>
   </xul:arrowscrollbox>
  </menupopup>
+ <toolbar id="header-view-toolbar">
+  <toolbarbutton id="pay_letter" label="&pay_letter;"/>
+ </toolbar>
  <statusbar id="status-bar">
   <statusbarpanel id="nova-panel" label="Nova"/>
  </statusbar>
