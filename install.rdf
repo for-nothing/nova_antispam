@@ -1,3 +1,4 @@
+
 <?xml version="1.0"?>
 
 
@@ -11,11 +12,13 @@
 
   <em:id>nova_antispam@novaco.in</em:id>
 
-  <em:version>0.16</em:version>
+  <em:version>0.17</em:version>
 
   <em:type>2</em:type>
   
 <em:targetApplication>
+
+   <!-- Thunderbird -->
 
    <Description>
 
@@ -28,15 +31,17 @@
    </Description>
 
   </em:targetApplication>
-
-    
-    <!-- Front End MetaData -->
-
+  <em:targetApplication>
+   <Description>
+    <em:id>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</em:id>
+    <em:minVersion>2.31</em:minVersion>
+    <em:maxVersion>2.32</em:maxVersion>
+   </Description>
+  </em:targetApplication>
   <em:name>Novacoin Antispam</em:name>
 
   <em:description>Keep a correspondence with only the well off people.
-      For donate 4VgkLjNQHDcawXbvuTry3X4V2WEXP66vay 
-  </em:description>
+For donate 4VgkLjNQHDcawXbvuTry3X4V2WEXP66vay</em:description>
 
   <em:creator>For-nothing</em:creator>
 
