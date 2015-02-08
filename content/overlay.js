@@ -10,22 +10,24 @@ function input_stream() {
 	return Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
 }
 function rep_err(novaPanel){
-	novaPanel.label = "Nova: " + request_posts.length + " " + msg_letters_pay + ", " + deleted + msg_letters_del + ", " + paid_posts.length + " " + msg_paid;
+	var strbundle = document.getElementById("novastrings");
+	novaPanel.label = "Nova: " + request_posts.length + strbundle.getString("msg_letters_pay") + deleted + strbundle.getString("msg_letters_del") + paid_posts.length + strbundle.getString("msg_paid");
 }
 window.addEventListener("load",function(){
 	var novaPanel = document.getElementById("nova-panel");
 	novaPanel.minWidth=200;
-//	novaPanel.label = msg_status_alive;
+novaPanel.label = "start";
 	get_save();
-//	novaPanel.label = "Nova: get_save";
+//novaPanel.label = "get_save();";
 	conmsg("nova_antispam load in progress...");
 	check_nova(novaPanel);
-//	novaPanel.label = "Nova: check_nova";
+//novaPanel.label = "check_nova(novaPanel);";
 	check_conf(novaPanel);
-//	novaPanel.label = err_client_not_run + "(load)";
-	check_user(novaPanel);
-//	novaPanel.label = "Nova: check_user";
+//novaPanel.label = "check_conf(novaPanel);";
+	check_user();
+//novaPanel.label = "check_user();";
 	check_mail(novaPanel);
+//novaPanel.label = "check_mail(novaPanel);";
 	window.setInterval(function(){
 		check_mail(nova_panel());
 	}, 60000);
@@ -52,6 +54,24 @@ function nova_panel(){
 return document.getElementById("nova-panel");
 }
 
+function file_in(file){
+	var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+	istream.init(file, 0x01, 00660, null);
+	var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
+	mInputStream.init(istream);
+	var save_str = mInputStream.read(mInputStream.available());
+	istream.close();
+	mInputStream.close();
+	return save_str;
+}
+
+function simple_file_out(file,what_to_do,save_str){
+	var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
+	foStream.init(file, what_to_do, 0660, 0);
+	foStream.write(save_str, save_str.length);
+	foStream.close();
+}
+
 function get_save(){
 	var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 	var prof = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("ProfD", Components.interfaces.nsIFile);
@@ -63,23 +83,19 @@ function get_save(){
 	}
 	file.initWithPath(prof.path + slash + "flag_save013.txt");
 	if(file.exists()){
-		var istream = input_stream();
-		istream.init(file, 0x01, 00660, null);
-		var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
-		mInputStream.init(istream);
-		var save_str = mInputStream.read(mInputStream.available());
-		istream.close();
-		mInputStream.close();
+		var save_str = file_in(file);
 		save_ch = save_str.match(/false|true/g)[0];
 		var check_line = document.getElementById("removeUnpaidPosts");
-		var check__line = document.getElementById("remove_unpaidPosts");
 		check_line.setAttribute("checked", save_ch);
-		check__line.setAttribute("checked", save_ch);
 		sync_ch = save_str.match(/false|true/g)[1];
 		var sync_book = document.getElementById("syncAddrBook");
 		sync_book.setAttribute("checked", sync_ch);
-		var sync__book = document.getElementById("sync_AddrBook");
-		sync__book.setAttribute("checked", sync_ch);
+		var check__line = document.getElementById("remove_unpaidPosts");
+		if(check__line){
+			check__line.setAttribute("checked", save_ch);
+			var sync__book = document.getElementById("sync_AddrBook");
+			sync__book.setAttribute("checked", sync_ch);
+		}
 	}
 	else{
 		save_ch = "false";
@@ -87,39 +103,26 @@ function get_save(){
 		var sync_book = document.getElementById("syncAddrBook");
 		sync_book.setAttribute("checked", sync_ch);
 		var sync__book = document.getElementById("sync_AddrBook");
-		sync__book.setAttribute("checked", sync_ch);
+		if(sync__book){
+			sync__book.setAttribute("checked", sync_ch);
+			var check__line = document.getElementById("remove_unpaidPosts");
+			check__line.setAttribute("checked", save_ch);
+		}
 		var check_line = document.getElementById("removeUnpaidPosts");
-		var check__line = document.getElementById("remove_unpaidPosts");
 		check_line.setAttribute("checked", save_ch);
-		check__line.setAttribute("checked", save_ch);
 		var save_str = "removeUnpaidPosts=false\r\nsyncAddrBook=true\r\n";
-		var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
-		foStream.init(file, 0x02 | 0x08 | 0x20, 0660, 0);
-		foStream.write(save_str, save_str.length);
-		foStream.close();
+		simple_file_out(file,0x02 | 0x08 | 0x20,save_str);
 	}
 	file.initWithPath(prof.path + slash + "txid_save.txt");
 	if(file.exists()){
-		var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
-		istream.init(file, 0x01, 00660, null);
-		var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
-		mInputStream.init(istream);
-		var save_str = mInputStream.read(mInputStream.available());
-		istream.close();
-		mInputStream.close();
+		var save_str = file_in(file);
 		if(save_str.match(/[0-9a-z]{64}/g)){
 			paid_txid = save_str.match(/[0-9a-z]{64}/g);
 		}
 	}
 	file.initWithPath(prof.path + slash + "posts_save.txt");
 	if(file.exists()){
-		var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
-		istream.init(file, 0x01, 00660, null);
-		var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
-		mInputStream.init(istream);
-		var save_str = mInputStream.read(mInputStream.available());
-		istream.close();
-		mInputStream.close();
+		var save_str = file_in(file);
 		if(save_str.match(/\w.*\w/gm)){
 			paid_posts = save_str.match(/\w.*\w/gm);
 		}
@@ -137,16 +140,17 @@ function check_nova(novaPanel){
 	}
 	file.initWithPath(home.path + nova);
 	if(!file.exists()){
+		var strbundle = document.getElementById("novastrings");
 		global_error = 1;
 		var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-		var result = prompts.confirm(null, title_not_found, err_client_not_found);
+		var result = prompts.confirm(null, strbundle.getString("title_not_found"), strbundle.getString("err_client_not_found"));
 		if(result){
 			var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(Components.interfaces.nsIWindowWatcher);
 			var win = ww.openWindow(null, "http://sourceforge.net/projects/novacoin/files/latest/download?source=files","aboutNovacoin", "chrome,centerscreen", null);
-			novaPanel.label = msg_after_install;
+			novaPanel.label = strbundle.getString("msg_after_install");
 		}
 		else{
-			novaPanel.label = "Nova: " + global_error + err_dir_not_found;
+			novaPanel.label = "Nova: " + global_error + strbundle.getString("err_dir_not_found");
 		}
 	}
 }
@@ -163,9 +167,10 @@ function check_conf(novaPanel){
 		}
 		file.initWithPath(home.path + nova);
 		if(!file.exists()){
+			var strbundle = document.getElementById("novastrings");
 			global_error = 2;
 			var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-			var result = prompts.confirm(null, title_conf_not_found, err_conf_not_found);
+			var result = prompts.confirm(null, strbundle.getString("title_conf_not_found"), strbundle.getString("err_conf_not_found"));
 			if(result){
 				var conf = "server=1\r\nrpcuser=";
 				var abc = "qwertyuioplkjhgfdsazxcvbnmMNBVCXZASDFGHJKLPOIUYTREWQ0123654789";
@@ -179,20 +184,17 @@ function check_conf(novaPanel){
 					pass = pass + abc.charAt(Math.round(Math.random() * (abc.length -1)));
 				}
 				conf = conf + pass + "\r\nrpcallowip=127.0.0.1\r\nrpcport=8344";
-				var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
-				foStream.init(file, 0x02 | 0x08 | 0x20, 0660, 0);
-				foStream.write(conf, conf.length);
-				foStream.close();
-				novaPanel.label = msg_conf_created;
+				simple_file_out(file,0x02 | 0x08 | 0x20,conf);
+				novaPanel.label = strbundle.getString("msg_conf_created");
 			}
 			else{
-				novaPanel.label = status_no_conf;
+				novaPanel.label = strbundle.getString("status_no_conf");
 			}
 		}
 	}
 }
 
-function check_user(novaPanel){
+function check_user(){
 	if(!global_error){
 		var file = local_file();
 		var home = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("Home", Components.interfaces.nsIFile);
@@ -205,50 +207,28 @@ function check_user(novaPanel){
 			var nova = "\\AppData\\Roaming\\NovaCoin\\novacoin.conf";
 		}
 		file.initWithPath(home.path + nova);
-		var istream = input_stream();
-		istream.init(file, 0x01, 00660, null);
-		var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
-		mInputStream.init(istream);
-		var conf = mInputStream.read(mInputStream.available());
-		istream.close();
-		mInputStream.close();
+		var conf = file_in(file);
 		user_attr.rpcuser = conf.match(/^rpcuser.*\w/gm)[0].slice(8);
 		user_attr.rpcpassword = conf.match(/^rpcpassword.*\w/gm)[0].slice(12);
 		user_attr.rpcallowip = conf.match(/^rpcallowip.*\w/gm)[0].slice(11);
 		var v = conf.match(/^rpcport.*\w/gm)[0].slice(8);
 		if (v) user_attr.rpcport = v;
-		novaPanel.label = "Nova: rpcuser=" + user_attr.rpcuser + ", rpcport=" + user_attr.rpcport;
 		var prof = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties).get("ProfD", Components.interfaces.nsIFile);
 		file.initWithPath(prof.path + slash + "accnts_save.txt");
 		if(file.exists()){
-			var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
-			istream.init(file, 0x01, 00660, null);
-			var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
-			mInputStream.init(istream);
-			var save_str = mInputStream.read(mInputStream.available());
-			istream.close();
-			mInputStream.close();
+			var save_str = file_in(file);
 			if(save_str.match(/^[()'"а-яА-Яa-z0-9A-Z.!#$%&*+-/=?^_`{}|~ ]*@[() а-яА-Яa-z0-9A-Z-_.:]*/gm)){
 				enbl_accnts = save_str.match(/^[()'"а-яА-Яa-z0-9A-Z.!#$%&*+-/=?^_`{}|~ ]*@[() а-яА-Яa-z0-9A-Z-_.:]*/gm);
 			}
 		}
 		else{
 			var save_str = "write to the following address of the account you want to use\r\n";
-			var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
-			foStream.init(file, 0x02 | 0x08 | 0x20, 0660, 0);
-			foStream.write(save_str, save_str.length);
-			foStream.close();
+			simple_file_out(file,0x02 | 0x08 | 0x20,save_str);
 		}
 		var file_name = prof.path + slash + "user_save.txt";
 		file.initWithPath(file_name);
 		if(file.exists()){
-			var istream = input_stream();
-			istream.init(file, 0x01, 00660, null);
-			var mInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
-			mInputStream.init(istream);
-			var save_str = mInputStream.read(mInputStream.available());
-			istream.close();
-			mInputStream.close();
+			var save_str = file_in(file);
 			if(save_str.match(/^price=\d/gm)){
 				price = parseFloat(save_str.match(/^price=.*\w/gm)[0].slice(6).replace(",","."));
 			}
@@ -272,10 +252,7 @@ function check_user(novaPanel){
 		}
 		else{
 			var save_str = "address=write_there_your_novacoin_address \r\n\r\nprice=write_here_instead_your_price \r\n\r\nwrite below the allowable email addresses \r\n";
-			var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
-			foStream.init(file, 0x02 | 0x08 | 0x20, 0660, 0);
-			foStream.write(save_str, save_str.length);
-			foStream.close();
+			simple_file_out(file,0x02 | 0x08 | 0x20,save_str);
 			var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
 			req.open('POST', "http://" + user_attr.rpcuser + ":" + user_attr.rpcpassword + "@" + user_attr.rpcallowip + ":" + user_attr.rpcport + "/",false);
 			req.setRequestHeader('Content-Type', 'text/plain');
@@ -283,9 +260,6 @@ function check_user(novaPanel){
 			if(req.readyState == 4){
 				user_attr.address = JSON.parse(req.responseText).result;
 				global_error = 3;
-			}
-			else{
-				novaPanel.label = err_client_not_run + "(check_user)";
 			}
 		}
 	}
@@ -305,7 +279,7 @@ var nova_ident = { };
 var start_fold = { };
 
 
-function request_payment(novaPanel,do_it){
+function request_payment(do_it){
 	var cf = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
 	cf.from = (ms_hr.mime2DecodedRecipients + "<" + ms_hr.recipients).match(/[()'"а-яА-Яa-z0-9A-Z.!#$%&*+-/=?^_`{}|~ ]*@[() а-яА-Яa-z0-9A-Z-_.:]*/)[0];
 	cf.subject = ms_hr.mime2DecodedSubject;
@@ -325,7 +299,7 @@ function request_payment(novaPanel,do_it){
 	},140);
 }
 
-function process_account(novaPanel){
+function process_account(){
 	var acctMgr = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 	var accounts = acctMgr.accounts;
 	if(acc_num < accounts.length){
@@ -416,7 +390,7 @@ function process_account(novaPanel){
 		else{
 			acc_num++;
 			window.setTimeout(function () {
-				process_account(nova_panel());
+				process_account();
 			},10);
 		}
 	}
@@ -429,6 +403,7 @@ function process_account(novaPanel){
 		},60);
 	}
 }
+
 function start_msg(novaPanel){
 	if(msg_num < array_msg.length){
 		gFolderTreeView.selectFolder(nova_inbox);
@@ -439,8 +414,9 @@ function start_msg(novaPanel){
 		messenger.messageServiceFromURI(uri_m).streamMessage(uri_m, listener, null, null, false, "");
 		var mssg = nova_inbox.getMsgTextFromStream(listener.inputStream,ms_hr.Charset,ms_hr.messageSize,ms_hr.messageSize,false,true,{ });
 		listener.close();
+		var strbundle = document.getElementById("novastrings");
 		if(mssg.match(/[0-9a-z]{64}/)){
-			novaPanel.label = err_client_not_run + "(start_msg)";
+			novaPanel.label = strbundle.getString("err_client_not_run") + "(start_msg)";
 			txid = mssg.match(/[0-9a-z]{64}/)[0];
 			var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
 			req.open('POST', "http://" + user_attr.rpcuser + ":" + user_attr.rpcpassword + "@" + user_attr.rpcallowip + ":" + user_attr.rpcport + "/", false);
@@ -449,7 +425,7 @@ function start_msg(novaPanel){
 			if(req.readyState == 4){
 				tranz = JSON.parse(req.responseText);
 				window.setTimeout(function () {
-					process_message(nova_panel());
+					process_message();
 				},10);
 			}
 			else{
@@ -459,7 +435,7 @@ function start_msg(novaPanel){
 			}
 		}
 		else{
-			request_payment(nova_panel(), rpl_body_1 + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + rpl_body_1a + price + rpl_body_2 + user_attr.address + rpl_body_3);
+			request_payment( strbundle.getString("rpl_body_1") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("rpl_body_1a") + price + strbundle.getString("rpl_body_2") + user_attr.address + strbundle.getString("rpl_body_3"));
 			if(save_ch == "true"){
 				window.setTimeout(function () {
 					gFolderDisplay.selectMessage(ms_hr);
@@ -472,15 +448,15 @@ function start_msg(novaPanel){
 	else{
 		acc_num++;
 		window.setTimeout(function () {
-			process_account(nova_panel());
+			process_account();
 		},10);
 	}
 }
 
-
-function process_message(novaPanel){
+function process_message(){
+	var strbundle = document.getElementById("novastrings");
 	if(tranz.error && (tranz.error.code == -5)){
-		request_payment(nova_panel(), err_incorrect_txid + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + err_incorrect_txid1);
+		request_payment( strbundle.getString("err_incorrect_txid") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("err_incorrect_txid1"));
 		if(save_ch == "true"){
 			window.setTimeout(function () {
 				gFolderDisplay.selectMessage(ms_hr);
@@ -490,7 +466,7 @@ function process_message(novaPanel){
 		}
 	}
 	else if(tranz.result.details[0].address != user_attr.address){
-		request_payment(nova_panel(), err_wrong_target + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + err_wrong_target1 + price + rpl_body_2s + user_attr.address + rpl_body_3);
+		request_payment( strbundle.getString("err_wrong_target") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("err_wrong_target1") + price + strbundle.getString("rpl_body_2s") + user_attr.address + strbundle.getString("rpl_body_3"));
 		if(save_ch == "true"){
 			window.setTimeout(function () {
 				gFolderDisplay.selectMessage(ms_hr);
@@ -500,7 +476,7 @@ function process_message(novaPanel){
 		}
 	}
 	else if(tranz.result.amount < price){
-		request_payment(nova_panel(), msg_u_send_to + user_attr.address + msg_bellow + price + " NVC" + rpl_body_1 + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + rpl_body_1a + price + rpl_body_2d + rpl_body_3);
+		request_payment( strbundle.getString("msg_u_send_to") + user_attr.address + strbundle.getString("msg_bellow") + price + " NVC" + strbundle.getString("rpl_body_1") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("rpl_body_1a") + price + strbundle.getString("rpl_body_2d") + strbundle.getString("rpl_body_3"));
 		if(save_ch == "true"){
 			window.setTimeout(function () {
 				gFolderDisplay.selectMessage(ms_hr);
@@ -510,7 +486,7 @@ function process_message(novaPanel){
 		}
 	}
 	else if(tranz.result.vout[0].value == 0){	
-		request_payment(nova_panel(), err_no_comission + rpl_body_1 + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + rpl_body_1a + price + rpl_body_2 + user_attr.address + rpl_body_3);
+		request_payment( strbundle.getString("err_no_comission") + strbundle.getString("rpl_body_1") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("rpl_body_1a") + price + strbundle.getString("rpl_body_2") + user_attr.address + strbundle.getString("rpl_body_3"));
 		if(save_ch == "true"){
 			window.setTimeout(function () {
 				gFolderDisplay.selectMessage(ms_hr);
@@ -520,7 +496,7 @@ function process_message(novaPanel){
 		}
 	}
 	else if(paid_txid.indexOf(txid) != -1){
-		request_payment(nova_panel(), err_double_use + txid + ". " + rpl_body_1 + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + rpl_body_1a + price + rpl_body_2 + user_attr.address + rpl_body_3);
+		request_payment( strbundle.getString("err_double_use") + txid + ". " + strbundle.getString("rpl_body_1") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("rpl_body_1a") + price + strbundle.getString("rpl_body_2") + user_attr.address + strbundle.getString("rpl_body_3"));
 		if(save_ch == "true"){
 			window.setTimeout(function () {
 				gFolderDisplay.selectMessage(ms_hr);
@@ -540,17 +516,18 @@ function process_message(novaPanel){
 }
 
 function check_mail(novaPanel){
+	var strbundle = document.getElementById("novastrings");
 	if(global_error == 3){
 		acc_num = 0;
 		if(enbl_accnts.length != 0){
 			start_fold = gFolderDisplay.displayedFolder;
-			process_account(nova_panel());
+			process_account();
 		}
 		else{
-			novaPanel.label = no_selected_accounts;
+			novaPanel.label = strbundle.getString("no_selected_accounts");
 		}
 	}
 	else if(global_error == 0){
-		novaPanel.label = err_client_not_run + "(check_mail)";
+		novaPanel.label = strbundle.getString("err_client_not_run") + "(check_mail)";
 	}
 }
