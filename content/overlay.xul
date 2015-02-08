@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <!DOCTYPE window SYSTEM "chrome://nova_antispam/locale/nova.dtd">
-
 <overlay id="nova_antispam" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
-<script type="application/javascript" src="chrome://nova_antispam/content/lang_ru.js"/>
 <script type="application/javascript" src="chrome://nova_antispam/content/overlay.js"/>
 <script type="application/javascript" src="chrome://nova_antispam/content/seting.js"/>
+<stringbundleset id="stringbundleset">
+ <stringbundle id="novastrings" src="chrome://nova_antispam/locale/strings.properties"/>
+</stringbundleset>
  <menupopup id="taskPopup">
   <menu id="NovaAntispam" label="nova_antispam">
    <menupopup id="novaAntispam" label="nova_antispam">
@@ -13,7 +13,7 @@
     <menuitem id="setnvcPrice" label="&menu_amount_nvc;"/>
     <menuitem id="setnvcAddres" label="&menu_address_nvc;"/>
     <menuitem id="addToWhiteList" label="&menu_address_eml;"/>
-    <menuitem id="syncAddrBook" type="checkbox" label="&menu_sync_addr_book;" checked="false"/>
+    <menuitem id="syncAddrBook" type="checkbox" label="&menu_sync_addr_book;" checked="true"/>
     <menuitem id="accManagement" label="&menu_acc_management;"/>
    </menupopup>
   </menu>
@@ -26,15 +26,20 @@
      <menuitem id="set_nvcPrice" label="&menu_amount_nvc;"/>
      <menuitem id="set_nvcAddres" label="&menu_address_nvc;"/>
      <menuitem id="add_ToWhiteList" label="&menu_address_eml;"/>
-     <menuitem id="sync_AddrBook" type="checkbox" label="&menu_sync_addr_book;" checked="false"/>
+     <menuitem id="sync_AddrBook" type="checkbox" label="&menu_sync_addr_book;" checked="true"/>
      <menuitem id="acc_Management" label="&menu_acc_management;"/>
     </menupopup>
    </menu>
   </xul:arrowscrollbox>
  </menupopup>
  <toolbar id="header-view-toolbar">
-  <toolbarbutton id="pay_letter" label="&pay_letter;"/>
+  <toolbarbutton id="payLetter" label="&pay_letter;"/>
  </toolbar>
+ <hbox id="expandedHeaderView">
+  <vbox id="pay-letter">
+   <label id="pay_letter" value="&pay_letter;" type="button"/>
+  </vbox>
+ </hbox>
  <statusbar id="status-bar">
   <statusbarpanel id="nova-panel" label="Nova"/>
  </statusbar>
