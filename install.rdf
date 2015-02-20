@@ -1,4 +1,3 @@
-
 <?xml version="1.0"?>
 
 
@@ -12,7 +11,7 @@
 
   <em:id>nova_antispam@novaco.in</em:id>
 
-  <em:version>0.17</em:version>
+  <em:version>0.18</em:version>
 
   <em:type>2</em:type>
   
