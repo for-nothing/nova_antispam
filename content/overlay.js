@@ -1,8 +1,3 @@
-function conmsg(msg){
-	if (console)
-	console.log(msg);
-}
-
 function local_file(){
 	return Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 }
@@ -19,7 +14,6 @@ window.addEventListener("load",function(){
 novaPanel.label = "start";
 	get_save();
 //novaPanel.label = "get_save();";
-	conmsg("nova_antispam load in progress...");
 	check_nova(novaPanel);
 //novaPanel.label = "check_nova(novaPanel);";
 	check_conf(novaPanel);
@@ -49,6 +43,7 @@ var price = 0.1;
 var paid_txid = [];
 var sync_ch = "true";
 var enbl_accnts = [];
+var sig_ch = "";
 
 function nova_panel(){
 return document.getElementById("nova-panel");
@@ -81,37 +76,35 @@ function get_save(){
 	else{
 		var slash = "\\";
 	}
-	file.initWithPath(prof.path + slash + "flag_save013.txt");
+	file.initWithPath(prof.path + slash + "flag_save019.txt");
+	var check_line = document.getElementById("removeUnpaidPosts");
+	var sync_book = document.getElementById("syncAddrBook");
+	var check_sig = document.getElementById("checkSigPosts");
+	var check__line = document.getElementById("remove_unpaidPosts");
+	if(check__line){
+		var sync__book = document.getElementById("sync_AddrBook");
+		var check__sig = document.getElementById("check_SigPosts");
+	}
 	if(file.exists()){
 		var save_str = file_in(file);
 		save_ch = save_str.match(/false|true/g)[0];
-		var check_line = document.getElementById("removeUnpaidPosts");
-		check_line.setAttribute("checked", save_ch);
 		sync_ch = save_str.match(/false|true/g)[1];
-		var sync_book = document.getElementById("syncAddrBook");
-		sync_book.setAttribute("checked", sync_ch);
-		var check__line = document.getElementById("remove_unpaidPosts");
-		if(check__line){
-			check__line.setAttribute("checked", save_ch);
-			var sync__book = document.getElementById("sync_AddrBook");
-			sync__book.setAttribute("checked", sync_ch);
-		}
+		sig_ch = save_str.match(/false|true/g)[2];
 	}
 	else{
 		save_ch = "false";
 		sync_ch = "true";
-		var sync_book = document.getElementById("syncAddrBook");
-		sync_book.setAttribute("checked", sync_ch);
-		var sync__book = document.getElementById("sync_AddrBook");
-		if(sync__book){
-			sync__book.setAttribute("checked", sync_ch);
-			var check__line = document.getElementById("remove_unpaidPosts");
-			check__line.setAttribute("checked", save_ch);
-		}
-		var check_line = document.getElementById("removeUnpaidPosts");
-		check_line.setAttribute("checked", save_ch);
-		var save_str = "removeUnpaidPosts=false\r\nsyncAddrBook=true\r\n";
+		sig_ch = "false";
+		var save_str = "removeUnpaidPosts=false\r\nsyncAddrBook=true\r\nremoveUnsignedPosts=false\r\n";
 		simple_file_out(file,0x02 | 0x08 | 0x20,save_str);
+	}
+	check_line.setAttribute("checked", save_ch);
+	sync_book.setAttribute("checked", sync_ch);
+	check_sig.setAttribute("checked", sig_ch);
+	if(check__line){
+		check__line.setAttribute("checked", save_ch);
+		sync__book.setAttribute("checked", sync_ch);
+		check__sig.setAttribute("checked", sig_ch);
 	}
 	file.initWithPath(prof.path + slash + "txid_save.txt");
 	if(file.exists()){
@@ -285,16 +278,16 @@ function check_user(){
 ms_hr = { };
 var msg_num = 0;
 var array_msg = [];
-var tranz = { };
+var tranz = "";
 var txid = "";
-var msg_num = 0;
 var nova_inbox = { };
 var nova_trash = { };
+var nova_outbox = { };
 var acc_num = 0;
 var nova_acc = { };
 var nova_ident = { };
 var start_fold = { };
-
+var mssg_from_hr = "";
 
 function request_payment(do_it){
 	var cf = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
@@ -313,7 +306,7 @@ function request_payment(do_it){
 	msg_num++;
 	window.setTimeout(function () {
 		start_msg(nova_panel());
-	},140);
+	},130);
 }
 
 function process_account(){
@@ -335,21 +328,24 @@ function process_account(){
 			}
 			if(has_ident){
 				var rootFolder = nova_acc.incomingServer.rootFolder;
-				var has_inbox = 0;
-				var has_trash = 0;
+				var has_all = 0;
 				if (rootFolder.hasSubFolders){
 					var subFolders = rootFolder.subFolders;
 					while(subFolders.hasMoreElements()){
 						var folder = subFolders.getNext().QueryInterface(Components.interfaces.nsIMsgFolder);
 						if(folder.name.match(/inbox|входящие/i)){
 							nova_inbox = folder;
-							has_inbox = 1;
+							has_all++;
 						}
 						if(folder.name.match(/trash|корзина|удал[ёе]нные/i)){
 							nova_trash = folder;
-							has_trash = 1;
+							has_all++;
 						}
-						if(has_trash + has_inbox == 2){
+						if(folder.name.match(/outbox|исходящие|отправленные/i)){
+							nova_outbox = folder;	
+							has_all++;
+						}
+						if(has_all == 3){
 							break;
 						}
 						if(folder.hasSubFolders){
@@ -358,17 +354,21 @@ function process_account(){
 								var s_f = gm.getNext().QueryInterface(Components.interfaces.nsIMsgFolder);
 								if(s_f.name.match(/inbox|входящие/i)){
 									nova_inbox = s_f;
-									has_inbox = 1;
+									has_all++;
 								}
 								if(s_f.name.match(/trash|корзина|удал[её]нные/i)){
 									nova_trash = s_f;
-									has_trash = 1;
+									has_all++;
+								}
+								if(s_f.name.match(/outbox|исходящие|отправленные/i)){
+									nova_outbox = s_f;	
+									has_all++;
 								}
 							}
 						}
 					}
 				}
-				if(has_trash + has_inbox == 2){
+				if(has_all == 3){
 					var entries = nova_inbox.messages;
 					array_msg = [];
 					if(sync_ch == "false"){
@@ -423,58 +423,67 @@ function process_account(){
 
 function start_msg(novaPanel){
 	if(msg_num < array_msg.length){
+		function it_local(){
+			if(mssg_from_hr.match(/[0-9a-z]{64}/)){
+				novaPanel.label = strbundle.getString("err_client_not_run") + "(start_msg)";
+				txid = mssg_from_hr.match(/[0-9a-z]{64}/)[0];
+				var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
+				req.open('POST', "http://" + user_attr.rpcuser + ":" + user_attr.rpcpassword + "@" + user_attr.rpcallowip + ":" + user_attr.rpcport + "/", false);
+				req.send('{ \"method\": \"gettransaction\", \"params\": ["' + txid + '"]}');
+				if(req.readyState == 4){
+					tranz = req.responseText;
+					window.setTimeout(function () {
+						process_message();
+					},10);
+				}
+				else{
+					window.setTimeout(function () {
+						start_msg(nova_panel());
+					},30);
+				}
+			}
+			else{
+				request_payment( strbundle.getString("rpl_body_1") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("rpl_body_1a") + price + strbundle.getString("rpl_body_2") + user_attr.address + strbundle.getString("rpl_body_3"));
+				if(save_ch == "true"){
+					window.setTimeout(function () {
+						gFolderDisplay.selectMessage(ms_hr);
+						MsgMoveMessage(nova_trash);
+						deleted++;
+					},70);
+				}
+			}
+		}
 		gFolderTreeView.selectFolder(nova_inbox);
 		ms_hr = array_msg[msg_num];
 		var uri_m = nova_inbox.getUriForMsg(ms_hr);
 		let messenger = Components.classes["@mozilla.org/messenger;1"].createInstance(Components.interfaces.nsIMessenger);
 		let listener = Components.classes["@mozilla.org/network/sync-stream-listener;1"].createInstance(Components.interfaces.nsISyncStreamListener);
 		messenger.messageServiceFromURI(uri_m).streamMessage(uri_m, listener, null, null, false, "");
-		var mssg = nova_inbox.getMsgTextFromStream(listener.inputStream,ms_hr.Charset,ms_hr.messageSize,ms_hr.messageSize,false,true,{ });
+		mssg_from_hr = nova_inbox.getMsgTextFromStream(listener.inputStream,ms_hr.Charset,ms_hr.messageSize,ms_hr.messageSize,false,true,{ });
 		listener.close();
 		var strbundle = document.getElementById("novastrings");
-		if(mssg.match(/\WmessageId:[() '"\wа-яА-я.!#$%&*+-/=?^_`{}|~@:]*/)){
-			var msid = mssg.match(/\WmessageId:[() '"\wа-яА-я.!#$%&*+-/=?^_`{}|~@:]*/)[0].slice(11);
+		if(mssg_from_hr.match(/\WmessageId:[() '"\wа-яА-я.!#$%&*+-/=?^_`{}|~@:]*/)){
+			var msid = mssg_from_hr.match(/\WmessageId:[() '"\wа-яА-я.!#$%&*+-/=?^_`{}|~@:]*/)[0].slice(11);
 			var entries = nova_outbox.messages;
+			var go_cont = true;
 			while(entries.hasMoreElements()){
 				var entry = entries.getNext();
 				entry.QueryInterface(Components.interfaces.nsIMsgDBHdr);
 				if(entry.messageId == msid){
 					msg_num++;
+					go_cont = false;
 					window.setTimeout(function () {
 						start_msg(nova_panel());
 					},30);
 					break;
 				}
 			}
-		}
-		else if(mssg.match(/[0-9a-z]{64}/)){
-			novaPanel.label = strbundle.getString("err_client_not_run") + "(start_msg)";
-			txid = mssg.match(/[0-9a-z]{64}/)[0];
-			var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
-			req.open('POST', "http://" + user_attr.rpcuser + ":" + user_attr.rpcpassword + "@" + user_attr.rpcallowip + ":" + user_attr.rpcport + "/", false);
-			req.setRequestHeader('Content-Type', 'text/plain');
-			req.send('{ \"method\": \"gettransaction\", \"params\": ["' + txid + '"]}');
-			if(req.readyState == 4){
-				tranz = JSON.parse(req.responseText);
-				window.setTimeout(function () {
-					process_message();
-				},10);
-			}
-			else{
-				window.setTimeout(function () {
-					start_msg(nova_panel());
-				},30);
+			if(go_cont){
+				it_local();
 			}
 		}
 		else{
-			request_payment( strbundle.getString("rpl_body_1") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("rpl_body_1a") + price + strbundle.getString("rpl_body_2") + user_attr.address + strbundle.getString("rpl_body_3"));
-			if(save_ch == "true"){
-				window.setTimeout(function () {
-					gFolderDisplay.selectMessage(ms_hr);
-					MsgMoveMessage(nova_trash);
-					deleted++;
-				},70);
-			}
+			it_local();
 		}
 	}
 	else{
@@ -487,7 +496,8 @@ function start_msg(novaPanel){
 
 function process_message(){
 	var strbundle = document.getElementById("novastrings");
-	if(tranz.error && (tranz.error.code == -5)){
+	trObj = JSON.parse(tranz);
+	if(trObj.error && (trObj.error.code == -5)){
 		request_payment( strbundle.getString("err_incorrect_txid") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("err_incorrect_txid1"));
 		if(save_ch == "true"){
 			window.setTimeout(function () {
@@ -497,56 +507,114 @@ function process_message(){
 			},70);
 		}
 	}
-	else if(tranz.result.details[0].address != user_attr.address){
-		request_payment( strbundle.getString("err_wrong_target") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("err_wrong_target1") + price + strbundle.getString("rpl_body_2s") + user_attr.address + strbundle.getString("rpl_body_3"));
-		if(save_ch == "true"){
-			window.setTimeout(function () {
-				gFolderDisplay.selectMessage(ms_hr);
-				MsgMoveMessage(nova_trash);
-				deleted++;
-			},70);
-		}
-	}
-	else if(tranz.result.amount < price){
-		request_payment( strbundle.getString("msg_u_send_to") + user_attr.address + strbundle.getString("msg_bellow") + price + " NVC" + strbundle.getString("rpl_body_1") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("rpl_body_1a") + price + strbundle.getString("rpl_body_2d") + strbundle.getString("rpl_body_3"));
-		if(save_ch == "true"){
-			window.setTimeout(function () {
-				gFolderDisplay.selectMessage(ms_hr);
-				MsgMoveMessage(nova_trash);
-				deleted++;
-			},70);
-		}
-	}
-	else if(tranz.result.vout[0].value == 0){	
-		request_payment( strbundle.getString("err_no_comission") + strbundle.getString("rpl_body_1") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("rpl_body_1a") + price + strbundle.getString("rpl_body_2") + user_attr.address + strbundle.getString("rpl_body_3"));
-		if(save_ch == "true"){
-			window.setTimeout(function () {
-				gFolderDisplay.selectMessage(ms_hr);
-				MsgMoveMessage(nova_trash);
-				deleted++;
-			},70);
-		}
-	}
-	else if(paid_txid.indexOf(txid) != -1){
-		request_payment( strbundle.getString("err_double_use") + txid + ". " + strbundle.getString("rpl_body_1") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("rpl_body_1a") + price + strbundle.getString("rpl_body_2") + user_attr.address + strbundle.getString("rpl_body_3"));
-		if(save_ch == "true"){
-			window.setTimeout(function () {
-				gFolderDisplay.selectMessage(ms_hr);
-				MsgMoveMessage(nova_trash);
-				deleted++;
-			},70);
-		}
-	}
 	else{
-		paid_posts.push(ms_hr.messageId);
-		paid_txid.push(txid);
-		msg_num++;
-		window.setTimeout(function () {
-			start_msg(nova_panel());
-		},10);
+		var isNotMe = true;
+		var amountMe = 0;
+		for(var i = 0;i < trObj.result.vout.length;i++){
+			for(var j =0;j < trObj.result.vout[i].scriptPubKey.addresses.length;j++){
+				if(trObj.result.vout[i].scriptPubKey.addresses[j] == user_attr.address){
+					isNotMe = false;
+					amountMe = trObj.result.vout[i].value;
+					break;
+				}
+			}
+			if(!isNotMe){
+				break;
+			}
+		}
+		if(isNotMe){
+			request_payment( strbundle.getString("err_wrong_target") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("err_wrong_target1") + price + strbundle.getString("rpl_body_2s") + user_attr.address + strbundle.getString("rpl_body_3"));
+			if(save_ch == "true"){
+				window.setTimeout(function () {
+					gFolderDisplay.selectMessage(ms_hr);
+					MsgMoveMessage(nova_trash);
+					deleted++;
+				},70);
+			}
+		}
+		else if(amountMe < price){
+			request_payment( strbundle.getString("msg_u_send_to") + user_attr.address + strbundle.getString("msg_bellow") + price + " NVC" + strbundle.getString("rpl_body_1") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("rpl_body_1a") + price + strbundle.getString("rpl_body_2d") + strbundle.getString("rpl_body_3"));
+			if(save_ch == "true"){
+				window.setTimeout(function () {
+					gFolderDisplay.selectMessage(ms_hr);
+					MsgMoveMessage(nova_trash);
+					deleted++;
+				},70);
+			}
+		}
+		else if(!tranz.match("fee")){	
+			request_payment( strbundle.getString("err_no_comission") + strbundle.getString("rpl_body_1") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("rpl_body_1a") + price + strbundle.getString("rpl_body_2") + user_attr.address + strbundle.getString("rpl_body_3"));
+			if(save_ch == "true"){
+				window.setTimeout(function () {
+					gFolderDisplay.selectMessage(ms_hr);
+					MsgMoveMessage(nova_trash);
+					deleted++;
+				},70);
+			}
+		}
+		else if(tranz.match("fee") && trObj.result.fee == 0){	
+			request_payment( strbundle.getString("err_no_comission") + strbundle.getString("rpl_body_1") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("rpl_body_1a") + price + strbundle.getString("rpl_body_2") + user_attr.address + strbundle.getString("rpl_body_3"));
+			if(save_ch == "true"){
+				window.setTimeout(function () {
+					gFolderDisplay.selectMessage(ms_hr);
+					MsgMoveMessage(nova_trash);
+					deleted++;
+				},70);
+			}
+		}
+		else if(paid_txid.indexOf(txid) != -1){
+			request_payment( strbundle.getString("err_double_use") + txid + ". " + strbundle.getString("rpl_body_1") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("rpl_body_1a") + price + strbundle.getString("rpl_body_2") + user_attr.address + strbundle.getString("rpl_body_3"));
+			if(save_ch == "true"){
+				window.setTimeout(function () {
+					gFolderDisplay.selectMessage(ms_hr);
+					MsgMoveMessage(nova_trash);
+					deleted++;
+				},70);
+			}
+		}
+		else{
+			if(sig_ch == "true"){
+				var msg_sig = "";
+				if(mssg_from_hr.match(/sig:[\w/+=]*/)){
+					msg_sig = mssg_from_hr.match(/sig:[\w/+=]*/)[0].slice(4);
+				}
+				if(!trObj.error){
+					var addr = get_nvc_addres(trObj.result.vin[0].scriptSig.asm.substr(-66,66));
+					var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
+					req.open('POST', "http://" + user_attr.rpcuser + ":" + user_attr.rpcpassword + "@" + user_attr.rpcallowip + ":" + user_attr.rpcport + "/", false);
+					req.send("{ \"method\": \"verifymessage\", \"params\": [ \"" + addr + "\",\"" + msg_sig + "\", \"" + txid + "\"]}");
+					trObj = JSON.parse(req.responseText);
+					if(!trObj.error && trObj.result){
+						paid_posts.push(ms_hr.messageId);
+						paid_txid.push(txid);
+						msg_num++;
+						window.setTimeout(function () {
+							start_msg(nova_panel());
+						},10);
+					}
+					else{
+						request_payment( strbundle.getString("in_your_letter") + ms_hr.messageId + "> " + ms_hr.mime2DecodedSubject + strbundle.getString("no_signature") + price + strbundle.getString("rpl_body_2s") + user_attr.address + strbundle.getString("how_to_add_signature"));
+						if(save_ch == "true"){
+							window.setTimeout(function () {
+								gFolderDisplay.selectMessage(ms_hr);
+								MsgMoveMessage(nova_trash);
+								deleted++;
+							},70);
+						}
+					}
+				}
+			}
+			else{
+				paid_posts.push(ms_hr.messageId);
+				paid_txid.push(txid);
+				msg_num++;
+				window.setTimeout(function () {
+					start_msg(nova_panel());
+				},10);
+			}
+		}
 	}
 }
-
 function check_mail(novaPanel){
 	var strbundle = document.getElementById("novastrings");
 	if(global_error == 3){
