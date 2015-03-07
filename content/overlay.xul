@@ -1,11 +1,13 @@
 <?xml version="1.0"?>
 <!DOCTYPE window SYSTEM "chrome://nova_antispam/locale/nova.dtd">
 <overlay id="nova_antispam" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<script type="application/javascript" src="chrome://nova_antispam/content/overlay.js"/>
-<script type="application/javascript" src="chrome://nova_antispam/content/seting.js"/>
-<stringbundleset id="stringbundleset">
- <stringbundle id="novastrings" src="chrome://nova_antispam/locale/strings.properties"/>
-</stringbundleset>
+ <script type="application/javascript" src="chrome://nova_antispam/content/overlay.js"/>
+ <script type="application/javascript" src="chrome://nova_antispam/content/seting.js"/>
+ <script type="application/javascript" src="chrome://nova_antispam/content/BigInteger.js"/>
+ <script type="application/javascript" src="chrome://nova_antispam/content/ripemd160.js"/>
+ <stringbundleset id="stringbundleset">
+  <stringbundle id="novastrings" src="chrome://nova_antispam/locale/strings.properties"/>
+ </stringbundleset>
  <menupopup id="taskPopup">
   <menu id="NovaAntispam" label="nova_antispam">
    <menupopup id="novaAntispam" label="nova_antispam">
@@ -15,6 +17,7 @@
     <menuitem id="addToWhiteList" label="&menu_address_eml;"/>
     <menuitem id="syncAddrBook" type="checkbox" label="&menu_sync_addr_book;" checked="true"/>
     <menuitem id="accManagement" label="&menu_acc_management;"/>
+    <menuitem id="checkSigPosts" type="checkbox" label="&check_sig;" checked="false"/>
    </menupopup>
   </menu>
  </menupopup>
@@ -28,6 +31,7 @@
      <menuitem id="add_ToWhiteList" label="&menu_address_eml;"/>
      <menuitem id="sync_AddrBook" type="checkbox" label="&menu_sync_addr_book;" checked="true"/>
      <menuitem id="acc_Management" label="&menu_acc_management;"/>
+     <menuitem id="check_SigPosts" type="checkbox" label="&check_sig;" checked="false"/>
     </menupopup>
    </menu>
   </xul:arrowscrollbox>
