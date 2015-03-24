@@ -2,7 +2,6 @@
 <!DOCTYPE window SYSTEM "chrome://nova_antispam/locale/nova.dtd">
 <overlay id="nova_antispam" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
  <script type="application/javascript" src="chrome://nova_antispam/content/overlay.js"/>
- <script type="application/javascript" src="chrome://nova_antispam/content/seting.js"/>
  <script type="application/javascript" src="chrome://nova_antispam/content/BigInteger.js"/>
  <script type="application/javascript" src="chrome://nova_antispam/content/ripemd160.js"/>
  <stringbundleset id="stringbundleset">
@@ -18,6 +17,7 @@
     <menuitem id="syncAddrBook" type="checkbox" label="&menu_sync_addr_book;" checked="true"/>
     <menuitem id="accManagement" label="&menu_acc_management;"/>
     <menuitem id="checkSigPosts" type="checkbox" label="&check_sig;" checked="false"/>
+    <menuitem id="moveToSpam" type="checkbox" label="&move_spam;" checked="false"/>
    </menupopup>
   </menu>
  </menupopup>
@@ -32,6 +32,7 @@
      <menuitem id="sync_AddrBook" type="checkbox" label="&menu_sync_addr_book;" checked="true"/>
      <menuitem id="acc_Management" label="&menu_acc_management;"/>
      <menuitem id="check_SigPosts" type="checkbox" label="&check_sig;" checked="false"/>
+     <menuitem id="move_ToSpam" type="checkbox" label="&move_spam;" checked="false"/>
     </menupopup>
    </menu>
   </xul:arrowscrollbox>
