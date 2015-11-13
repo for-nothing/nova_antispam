@@ -220,8 +220,8 @@
 		var strbundle = document.getElementById("novastrings");
 		var d_fold = gFolderDisplay.displayedFolder;
 		var p_hr = gFolderDisplay.selectedMessage;
-		let messenger = Components.classes["@mozilla.org/messenger;1"].createInstance(Components.interfaces.nsIMessenger);
-		let listener = Components.classes["@mozilla.org/network/sync-stream-listener;1"].createInstance(Components.interfaces.nsISyncStreamListener);
+		var messenger = Components.classes["@mozilla.org/messenger;1"].createInstance(Components.interfaces.nsIMessenger);
+		var listener = Components.classes["@mozilla.org/network/sync-stream-listener;1"].createInstance(Components.interfaces.nsISyncStreamListener);
 		var uri_m = d_fold.getUriForMsg(p_hr);
 		var aval = messenger.messageServiceFromURI(uri_m).streamMessage(uri_m, listener, null, null, false, "");
 		var mssg = d_fold.getMsgTextFromStream(listener.inputStream,p_hr.Charset,p_hr.messageSize,p_hr.messageSize,false,true,{ });
