@@ -8,15 +8,10 @@
 		novaPanel.minWidth=200;
 		novaPanel.label = "start";
 		get_save();
-//novaPanel.label = "get_save();";
 		check_nova(novaPanel);
-//novaPanel.label = "check_nova(novaPanel);";
 		check_conf(novaPanel);
-//novaPanel.label = "check_conf(novaPanel);";
 		check_user();
-//novaPanel.label = "check_user();";
 		check_mail(novaPanel);
-//novaPanel.label = "check_mail(novaPanel);";
 		var newMailListener = {
 			msgAdded: function(){  
 				check_mail(nova_panel());
@@ -59,18 +54,8 @@
 			save_check();
 			check_mail(nova_panel());
 		}, false);
-		var moveToSpam = document.getElementById("moveToSpam");
-		moveToSpam.addEventListener("command",function(){
-			toSpam = set_check("move_ToSpam",toSpam);
-			save_check();
-		}, false);
 		var set__price = document.getElementById("set_nvcPrice");
 		if(set__price){
-			var move_ToSpam = document.getElementById("move_ToSpam");
-			move_ToSpam.addEventListener("command",function(){
-				toSpam = set_check("moveToSpam",toSpam);
-				save_check();
-			}, false);
 			set__price.addEventListener("click",function(){
 				save_price();
 			},false);
@@ -109,10 +94,8 @@
 			pay_letter.addEventListener("command",function(){
 				payLetter();
 			}, false);
-
 		}
 		else{
-			itTb = false;
 			var pay_letter = document.getElementById("pay_letter");
 			pay_letter.addEventListener("click",function(){
 				payLetter();
@@ -126,8 +109,6 @@
 		save_address();
 	}, false);
 
-	var itTb = true;
-	var toSpam = "false";
 	var global_error = 0;
 	var user_attr = { };
 	user_attr.rpcuser = "";
@@ -157,8 +138,6 @@
 			slash = "\\";
 		}
 	})();
-
-
 	function convert_file_out(file,what_to_do,write){
 		var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
 		foStream.init(file, what_to_do, 0660, 0);
@@ -304,15 +283,37 @@
 				if(result){
 					var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
 					req.open('POST', "http://" + user_attr.rpcuser + ":" + user_attr.rpcpassword + "@" + user_attr.rpcallowip + ":" + user_attr.rpcport + "/", false);
-					req.send("{ \"method\": \"sendmany\", \"params\": [\"\",{ \"" + addr + "\": " + amount + ",\"" + user_attr.address + "\": 0.1}]}");
-					if(req.readyState == 4){
-						var trnz = JSON.parse(req.responseText);
-						if(!trnz.error){
-							var tx_id = trnz.result;
+					req.send("{ \"method\": \"listunspent\"}");
+					var jres = JSON.parse(req.responseText);
+					var amountToSend = 0;
+					var toCreate = "[";
+					for(var i = 0;amountToSend < amount;i++){
+						toCreate += "{\"txid\":\"" + jres.result[i].txid + "\",\"vout\":" + jres.result[i].vout + "},";
+						amountToSend += jres.result[i].amount;
+					}
+					toCreate = toCreate.slice(0,-1) + "],{\"" + addr + "\":" + amount + ",\"" + user_attr.address + "\":" + (amountToSend - amount - 0.01) + "}" ;
+					req.open('POST', "http://" + user_attr.rpcuser + ":" + user_attr.rpcpassword + "@" + user_attr.rpcallowip + ":" + user_attr.rpcport + "/", false);
+					req.send("{ \"method\": \"createrawtransaction\",\"params\":[" + toCreate + "]}");
+					jres = JSON.parse(req.responseText);
+					req.open('POST', "http://" + user_attr.rpcuser + ":" + user_attr.rpcpassword + "@" + user_attr.rpcallowip + ":" + user_attr.rpcport + "/", false);
+					req.send("{ \"method\": \"signrawtransaction\",\"params\":[\"" + jres.result + "\"]}");
+					jres = JSON.parse(req.responseText);
+					req.open('POST', "http://" + user_attr.rpcuser + ":" + user_attr.rpcpassword + "@" + user_attr.rpcallowip + ":" + user_attr.rpcport + "/", false);
+					req.send("{ \"method\": \"sendrawtransaction\",\"params\":[\"" + jres.result.hex + "\"]}");
+					jres = JSON.parse(req.responseText);
+					if(!jres.error){
+						var tx_id = jres.result;
+						req.open('POST', "http://" + user_attr.rpcuser + ":" + user_attr.rpcpassword + "@" + user_attr.rpcallowip + ":" + user_attr.rpcport + "/", false);
+						req.send('{ \"method\": \"gettransaction\", \"params\": ["' + tx_id + '"]}');
+						jres = JSON.parse(req.responseText);
+						if(jres.result.vin[0].scriptSig.asm.length == 209){								
+							addr = get_nvc_addres(jres.result.vin[0].scriptSig.asm.substr(-66,66));
+						}else{
+							var vout = jres.result.vin[0].vout;
 							req.open('POST', "http://" + user_attr.rpcuser + ":" + user_attr.rpcpassword + "@" + user_attr.rpcallowip + ":" + user_attr.rpcport + "/", false);
-							req.send('{ \"method\": \"gettransaction\", \"params\": ["' + tx_id + '"]}');
-							trnz = JSON.parse(req.responseText);
-							addr = get_nvc_addres(trnz.result.vin[0].scriptSig.asm.substr(-66,66));
+							req.send('{ \"method\": \"gettransaction\", \"params\": [\"' + jres.result.vin[0].txid + ' \"]}');
+							jres = JSON.parse(req.responseText);
+							addr = jres.result.vout[vout].scriptPubKey.addresses[0];
 						}
 					}
 					Components.utils.import("resource:///modules/gloda/mimemsg.js");
@@ -324,11 +325,9 @@
 					req.open('POST', "http://" + user_attr.rpcuser + ":" + user_attr.rpcpassword + "@" + user_attr.rpcallowip + ":" + user_attr.rpcport + "/", false);
 					req.send("{ \"method\": \"signmessage\", \"params\": [ \"" + addr + "\", \"" + tx_id + "\"]}");
 					var sig = "";
-					if(req.readyState == 4){
-						trnz = JSON.parse(req.responseText);
-						if(!trnz.error){
-							sig = trnz.result;
-						}
+					jres = JSON.parse(req.responseText);
+					if(!jres.error){
+						sig = jres.result;
 					}
 					var att_nts;
 					var cf = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
@@ -478,8 +477,8 @@
 	}
 
 	function save_check(){
-		file.initWithPath(prof.path + slash + "flag_save02.txt");
-		var save_str =  "removeUnpaidPosts=" + save_ch + "\r\nsyncAddrBook=" + sync_ch + "\r\nremoveUnsignedPosts=" + sig_ch + "\r\nmoveToSpam=" + toSpam + "\r\n";
+		file.initWithPath(prof.path + slash + "flag_save019.txt");
+		var save_str =  "removeUnpaidPosts=" + save_ch + "\r\nsyncAddrBook=" + sync_ch + "\r\nremoveUnsignedPosts=" + sig_ch + "\r\n";
 		simple_file_out(file,0x02 | 0x20,save_str);
 	}
 
@@ -506,41 +505,35 @@
 	}
 
 	function get_save(){
-		file.initWithPath(prof.path + slash + "flag_save02.txt");
+		file.initWithPath(prof.path + slash + "flag_save019.txt");
 		var check_line = document.getElementById("removeUnpaidPosts");
 		var sync_book = document.getElementById("syncAddrBook");
 		var check_sig = document.getElementById("checkSigPosts");
-		var moveToSpam = document.getElementById("moveToSpam");
 		var check__line = document.getElementById("remove_unpaidPosts");
 		if(check__line){
 			var sync__book = document.getElementById("sync_AddrBook");
 			var check__sig = document.getElementById("check_SigPosts");
-			var move_ToSpam = document.getElementById("move_ToSpam");
 		}
 		if(file.exists()){
 			var save_str = file_in(file);
 			save_ch = save_str.match(/false|true/g)[0];
 			sync_ch = save_str.match(/false|true/g)[1];
 			sig_ch = save_str.match(/false|true/g)[2];
-			toSpam = save_str.match(/false|true/g)[3];
 		}
 		else{
 			save_ch = "false";
 			sync_ch = "true";
 			sig_ch = "false";
-			toSpam = "false";
-			var save_str = "removeUnpaidPosts=false\r\nsyncAddrBook=true\r\nremoveUnsignedPosts=false\r\nmoveToSpam=false\r\n";
+			var save_str = "removeUnpaidPosts=false\r\nsyncAddrBook=true\r\nremoveUnsignedPosts=false\r\n";
 			simple_file_out(file,0x02 | 0x08 | 0x20,save_str);
 		}
 		check_line.setAttribute("checked", save_ch);
 		sync_book.setAttribute("checked", sync_ch);
 		check_sig.setAttribute("checked", sig_ch);
-		moveToSpam.setAttribute("checked", toSpam);
 		if(check__line){
 			check__line.setAttribute("checked", save_ch);
 			sync__book.setAttribute("checked", sync_ch);
 			check__sig.setAttribute("checked", sig_ch);
-			move_ToSpam.setAttribute("checked", toSpam);
 		}
 		file.initWithPath(prof.path + slash + "txid_save.txt");
 		if(file.exists()){
@@ -749,33 +742,25 @@
 					}
 				}
 				if(has_ident){
-					if(toSpam == "false"){
-						var regTrash = /trash|корзина|удал[ёе]нные/i;
-					}
-					else{
-						var regTrash = /spam|спам/i;
-					}
 					var rootFolder = nova_acc.incomingServer.rootFolder;
-					var hasTrash = false;
-					var hasInbox = false;
-					var hasOutbox = false;
+					var has_all = 0;
 					if (rootFolder.hasSubFolders){
 						var subFolders = rootFolder.subFolders;
 						while(subFolders.hasMoreElements()){
 							var folder = subFolders.getNext().QueryInterface(Components.interfaces.nsIMsgFolder);
 							if(folder.name.match(/inbox|входящие/i)){
 								nova_inbox = folder;
-								hasInbox = true;
+								has_all++;
 							}
-							if(folder.name.match(regTrash)){
+							if(folder.name.match(/trash|корзина|удал[ёе]нные/i)){
 								nova_trash = folder;
-								hasTrash = true;
+								has_all++;
 							}
 							if(folder.name.match(/outbox|исходящие|отправленные/i)){
 								nova_outbox = folder;	
-								hasOutbox = true;
+								has_all++;
 							}
-							if(hasOutbox && hasTrash && hasInbox){
+							if(has_all == 3){
 								break;
 							}
 							if(folder.hasSubFolders){
@@ -784,23 +769,47 @@
 									var s_f = gm.getNext().QueryInterface(Components.interfaces.nsIMsgFolder);
 									if(s_f.name.match(/inbox|входящие/i)){
 										nova_inbox = s_f;
-										hasInbox = true;
+										has_all++;
 									}
-									if(s_f.name.match(regTrash)){
+									if(s_f.name.match(/trash|корзина|удал[её]нные/i)){
 										nova_trash = s_f;
-										hasTrash = true;
+										has_all++;
 									}
 									if(s_f.name.match(/outbox|исходящие|отправленные/i)){
 										nova_outbox = s_f;	
-										hasOutbox = true;
+										has_all++;
 									}
 								}
 							}
 						}
 					}
-					if(hasOutbox && hasTrash && hasInbox){
+					if(has_all == 3){
 						var entries = nova_inbox.messages;
 						array_msg = [];
+						if(sync_ch == "true"){
+							let abManager = Components.classes["@mozilla.org/abmanager;1"].getService(Components.interfaces.nsIAbManager);
+							let allAddressBooks = abManager.directories;
+							let collection = allAddressBooks.getNext().QueryInterface(Components.interfaces.nsIAbCollection);
+							while(entries.hasMoreElements()){
+								var entry = entries.getNext();
+								entry.QueryInterface(Components.interfaces.nsIMsgDBHdr);
+								var e_ml = (entry.mime2DecodedAuthor + "<" + entry.author).match(/[()"'а-яА-Яa-z0-9A-Z.!#$%&*+-/=?^_`{}|~ ]*@[() а-яА-Яa-z0-9A-Z-_.:]*/)[0];
+								try{
+									var card = collection.cardForEmailAddress(e_ml);
+								}catch(e){
+									sync_ch = set_check("syncAddrBook",sync_ch);
+									save_check();
+									var strbundle = document.getElementById("novastrings");
+									prompts.alert(null,"Nova",strbundle.getString("errSyncAddrBook"));
+									break;
+								}
+								if(!card){
+									if((paid_posts.indexOf(entry.messageId) == -1) && (request_posts.indexOf(entry.messageId) == -1) && (white_list.indexOf(e_ml) == -1)){
+										array_msg.push(entry);
+									}
+								}
+							}
+						}
 						if(sync_ch == "false"){
 							while(entries.hasMoreElements()){
 								var entry = entries.getNext();
@@ -811,22 +820,7 @@
 								}
 							}
 						}
-						else{
-							let abManager = Components.classes["@mozilla.org/abmanager;1"].getService(Components.interfaces.nsIAbManager);
-							let allAddressBooks = abManager.directories;
-							let collection = allAddressBooks.getNext().QueryInterface(Components.interfaces.nsIAbCollection);
-							while(entries.hasMoreElements()){
-								var entry = entries.getNext();
-								entry.QueryInterface(Components.interfaces.nsIMsgDBHdr);
-								var e_ml = (entry.mime2DecodedAuthor + "<" + entry.author).match(/[()"'а-яА-Яa-z0-9A-Z.!#$%&*+-/=?^_`{}|~ ]*@[() а-яА-Яa-z0-9A-Z-_.:]*/)[0];
-								let card = collection.cardForEmailAddress(e_ml);
-								if(!card){
-									if((paid_posts.indexOf(entry.messageId) == -1) && (request_posts.indexOf(entry.messageId) == -1) && (white_list.indexOf(e_ml) == -1)){
-										array_msg.push(entry);
-									}
-								}
-							}
-						}
+						
 						window.setTimeout(function () {
 							start_msg(nova_panel());
 						},10);
@@ -841,8 +835,12 @@
 			}
 		}
 		else{
-			if(start_fold && itTb){
-				gFolderTreeView.selectFolder(start_fold);
+			if(start_fold){
+				try{
+					gFolderTreeView.selectFolder(start_fold);
+				}catch(e){
+					SelectFolder(start_fold.folderURL);
+				}
 			}
 			window.setTimeout(function () {
 				rep_err(nova_panel());
@@ -851,8 +849,8 @@
 	}
 
 	function start_msg(novaPanel){
+		var strbundle = document.getElementById("novastrings");
 		if(msg_num < array_msg.length){
-			var strbundle = document.getElementById("novastrings");
 			function it_local(){
 				if(mssg_from_hr.match(/[0-9a-z]{64}/)){
 					novaPanel.label = strbundle.getString("err_client_not_run") + "(start_msg)";
@@ -889,16 +887,19 @@
 					}
 				}
 			}
-			if(itTb){
+			try{
 				gFolderTreeView.selectFolder(nova_inbox);
+			}catch(e){
+				SelectFolder(nova_inbox.folderURL);
 			}
 			ms_hr = array_msg[msg_num];
 			var uri_m = nova_inbox.getUriForMsg(ms_hr);
 			let messenger = Components.classes["@mozilla.org/messenger;1"].createInstance(Components.interfaces.nsIMessenger);
 			let listener = Components.classes["@mozilla.org/network/sync-stream-listener;1"].createInstance(Components.interfaces.nsISyncStreamListener);
-			var aval = messenger.messageServiceFromURI(uri_m).streamMessage(uri_m, listener, null, null, false, "");
+			messenger.messageServiceFromURI(uri_m).streamMessage(uri_m, listener, null, null, false, "");
 			mssg_from_hr = nova_inbox.getMsgTextFromStream(listener.inputStream,ms_hr.Charset,ms_hr.messageSize,ms_hr.messageSize,false,true,{ });
 			listener.close();
+			var strbundle = document.getElementById("novastrings");
 			if(mssg_from_hr.match(/\WmessageId:[() '"\wа-яА-я.!#$%&*+-/=?^_`{}|~@:]*/)){
 				var msid = mssg_from_hr.match(/\WmessageId:[() '"\wа-яА-я.!#$%&*+-/=?^_`{}|~@:]*/)[0].slice(11);
 				var entries = nova_outbox.messages;
