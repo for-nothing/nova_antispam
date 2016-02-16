@@ -11,7 +11,7 @@
 
   <em:id>nova_antispam@novaco.in</em:id>
 
-  <em:version>0.21</em:version>
+  <em:version>0.22</em:version>
 
   <em:type>2</em:type>
   
@@ -34,7 +34,7 @@
    <Description>
     <em:id>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</em:id>
     <em:minVersion>2.31</em:minVersion>
-    <em:maxVersion>2.32</em:maxVersion>
+    <em:maxVersion>2.39</em:maxVersion>
    </Description>
   </em:targetApplication>
   <em:name>Novacoin Antispam</em:name>
